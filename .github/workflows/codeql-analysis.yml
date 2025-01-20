@@ -38,7 +38,7 @@ jobs:
     - if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        for i in `ls -d */`;
+        for i in `(Get-ChildItem -Directory).BaseName`;
         do cd $i;
         gcc *.cpp -o ../$i.exe
         cd ..; done
