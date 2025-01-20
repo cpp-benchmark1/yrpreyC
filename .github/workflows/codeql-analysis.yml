@@ -38,7 +38,10 @@ jobs:
     - if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        gcc **/*.cpp -o yrpreyC 
+        for i in `ls -d */`;
+        do cd $i;
+        gcc *.cpp -o ../$i.exe
+        cd ..; done
     - name: Free disk space
       run: |
           sudo docker rmi $(docker image ls -aq) >/dev/null 2>&1 || true
