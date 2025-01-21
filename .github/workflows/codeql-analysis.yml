@@ -36,12 +36,14 @@ jobs:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
     - if: matrix.build-mode == 'manual'
-      shell: bash
+      shell: pwsh
       run: |
-        for i in `(Get-ChildItem -Directory).BaseName`;
-        do cd $i;
-        gcc *.cpp -o ../$i.exe
-        cd ..; done
+        Get-ChildItem -Directory | ForEach-Object {
+          $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
+          if ($CppFile) {
+            gcc $CppFile.FullName -o "$($_.Name).exe"
+          }
+        }
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
