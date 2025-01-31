@@ -41,10 +41,9 @@ jobs:
           Get-ChildItem -Directory | ForEach-Object {
           $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
             if ($CppFile) {
-              gcc $CppFile.FullName -o "$($_.Name).exe"
+              ./coverity_tool/bin/cov-build --dir cov-int gcc $CppFile.FullName -o "$($_.Name).exe"
             }
           }
-          coverity_tool/bin/cov-build --dir cov-int scons
       - name: Compress with bzip2
         run: |
           tar -cjvf myproject.tar.bz2 -C cov-int
