@@ -38,10 +38,11 @@ jobs:
           Write-Output "Coverity Tool installed successfully"
       - name: Build with Coverity
         run: |
+          ls -Path coverity_tool/bin
           Get-ChildItem -Directory | ForEach-Object {
           $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
             if ($CppFile) {
-              ./coverity_tool/bin/cov-build --dir cov-int gcc $CppFile.FullName -o "$($_.Name).exe"
+               & "coverity_tool/bin/cov-build --dir cov-int gcc $CppFile.FullName -o '$($_.Name).exe'"
             }
           }
       - name: Compress with bzip2
