@@ -38,7 +38,9 @@ jobs:
           Write-Output "Coverity Tool installed successfully"
       - name: Build with Coverity
         run: |
-          ls -Path coverity_tool/bin
+          Get-Location
+          ls -Path .
+          ls -Path coverity_tool
           Get-ChildItem -Directory | ForEach-Object {
           $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
             if ($CppFile) {
