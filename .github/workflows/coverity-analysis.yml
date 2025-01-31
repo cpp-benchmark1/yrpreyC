@@ -38,9 +38,12 @@ jobs:
           Write-Output "Coverity Tool installed successfully"
       - name: Build with Coverity
         run: |
-          Get-Location -Path .
-          ls -Path .
-          ls -Path coverity_tool
+          Get-ChildItem -Directory | ForEach-Object {
+            $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
+            if ($CppFile) {
+               & "cov-analysis-win64-2024.6.1/bin/cov-build.exe --dir cov-int gcc $CppFile.FullName -o '$($_.Name).exe'"
+            }
+          }
       - name: Compress with bzip2
         run: |
           tar -cjvf myproject.tar.bz2 -C cov-int
