@@ -46,7 +46,7 @@ jobs:
           }
       - name: Compress with bzip2
         run: |
-          tar -cvjf myproject.tar.bz2 cov-int
+          tar -cvaf myproject.tar.bz2 cov-int
         id: compress
       - name: Create GitHub Release
         id: create_release
