@@ -33,7 +33,7 @@ jobs:
         run: |
           Invoke-WebRequest -Uri "https://scan.coverity.com/download/win64" -Method Post -Body "token=${{ secrets.COVERITY_TOKEN }}&project=${{ github.repository }}" -OutFile "coverity_tool.zip"
           New-Item -ItemType Directory -Path "coverity_tool" -Force | Out-Null
-          unzip coverity_tool.zip
+          Expand-Archive -Force coverity_tool.zip coverity_tool
           $Env:PATH = "$PWD\coverity_tool\bin;$Env:PATH"
           Write-Output "Coverity Tool installed successfully"
       - name: Build with Coverity
@@ -41,7 +41,7 @@ jobs:
           Get-ChildItem -Directory | ForEach-Object {
             $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
             if ($CppFile) {
-               cov-analysis-win64-2024.6.1/bin/cov-build.exe --dir cov-int gcc $CppFile.FullName -o '$($_.Name).exe'
+               coverity_tool/bin/cov-build.exe --dir cov-int gcc $CppFile.FullName -o '$($_.Name).exe'
             }
           }
       - name: Compress with bzip2
