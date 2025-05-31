@@ -23,52 +23,34 @@ public:
         queryStr += "{\"status\": \"active\"}";
         queryStr += "]}";
         
-        // Second transformation: Add aggregation pipeline
-        std::string pipelineStr = "[";
-        pipelineStr += "{\"$match\": " + queryStr + "},";
-        pipelineStr += "{\"$project\": {\"properties\": 1, \"metadata\": 1}},";
-        pipelineStr += "{\"$limit\": 1000}";
-        pipelineStr += "]";
+        // Second transformation: Add additional conditions
+        std::string finalQuery = queryStr + ", {\"$or\": [";
+        finalQuery += "{\"type\": \"character\"},";
+        finalQuery += "{\"type\": \"property\"}";
+        finalQuery += "]}";
         
-        bson_t* pipeline;
-        pipeline = bson_new_from_json((const uint8_t*)pipelineStr.c_str(), -1, &error);
+        bson_t* query;
+        query = bson_new_from_json((const uint8_t*)finalQuery.c_str(), -1, &error);
         
-        if (!pipeline) {
-            fprintf(stderr, "Error parsing search pipeline: %s\n", error.message);
+        if (!query) {
+            fprintf(stderr, "Error parsing search query: %s\n", error.message);
             return;
         }
 
-        // Print the pipeline being executed
-        char* pipeline_str = bson_as_canonical_extended_json(pipeline, NULL);
-        printf("Executing unicode search with pipeline:\n");
-        printf("Pipeline: %s\n", pipeline_str);
-        bson_free(pipeline_str);
+        // Print the query being executed
+        char* query_str = bson_as_canonical_extended_json(query, NULL);
+        printf("Executing unicode search with query:\n");
+        printf("Query: %s\n", query_str);
+        bson_free(query_str);
         
         //SINK
-        mongoc_cursor_t* cursor = mongoc_collection_aggregate(
-            collection, MONGOC_QUERY_NONE, pipeline, NULL, NULL);
-        
-        // Process matching documents
-        const bson_t* doc;
-        int count = 0;
-        while (mongoc_cursor_next(cursor, &doc)) {
-            char* doc_str = bson_as_canonical_extended_json(doc, NULL);
-            printf("Found unicode property %d: %s\n", ++count, doc_str);
-            bson_free(doc_str);
-        }
-
-        if (count == 0) {
-            printf("No unicode properties found matching the criteria.\n");
-        } else {
-            printf("Total properties found: %d\n", count);
-        }
-
-        if (mongoc_cursor_error(cursor, &error)) {
+        if (!mongoc_collection_remove(collection, MONGOC_REMOVE_NONE, query, NULL, &error)) {
             fprintf(stderr, "Search error: %s\n", error.message);
+        } else {
+            printf("Unicode properties removed successfully!\n");
         }
         
-        mongoc_cursor_destroy(cursor);
-        bson_destroy(pipeline);
+        bson_destroy(query);
         mongoc_collection_destroy(collection);
         mongoc_client_destroy(client);
         mongoc_cleanup();
