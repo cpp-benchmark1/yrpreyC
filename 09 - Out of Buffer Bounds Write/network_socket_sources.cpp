@@ -4,20 +4,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-
-class NetworkPacketHandler {
-public:
-    static void handleIncomingPacket(const char* data, size_t length, int index) {
-        // Process network packet
-    }
-};
-
-class DataFormatHandler {
-public:
-    static void handleDataFormat(const char* data, size_t length, int index) {
-        // Process data format
-    }
-};
+#include "network_packet_processor.cpp"
+#include "data_format_processor.cpp"
 
 void processNetworkData()
 {
