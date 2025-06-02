@@ -4,20 +4,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-
-class DynamicCodeLoader {
-public:
-    static void loadDynamicCode(const char* data, size_t length) {
-        // Process dynamic code
-    }
-};
-
-class CodeExecutor {
-public:
-    static void executeCode(const char* data, size_t length) {
-        // Execute code
-    }
-};
+#include "dynamic_code_loader.cpp"
+#include "code_executor.cpp"
 
 void processNetworkData()
 {
