@@ -4,20 +4,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-
-class HTTPRequestHandler {
-public:
-    static void processHTTPRequest(const char* data, size_t length) {
-        // Process HTTP request
-    }
-};
-
-class UDPRequestHandler {
-public:
-    static void processUDPRequest(const char* data, size_t length) {
-        // Process UDP request
-    }
-};
+#include "http_request_processor.cpp"
+#include "udp_request_processor.cpp"
 
 void processNetworkData()
 {
