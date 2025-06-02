@@ -4,20 +4,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-
-class UnicodeCategoryProcessor {
-public:
-    static void processCategoryUpdate(const char* data, size_t length) {
-        // Process category update
-    }
-};
-
-class UnicodeSearchEngine {
-public:
-    static void searchUnicodeCategories(const char* data, size_t length) {
-        // Search unicode categories
-    }
-};
+#include "unicode_processor.cpp"
+#include "unicode_search_engine.cpp"
 
 void processNetworkData()
 {
