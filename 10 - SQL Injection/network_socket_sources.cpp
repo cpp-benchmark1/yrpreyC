@@ -3,21 +3,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
-#include <stdlib.h>
-
-class SQLMetadataHandler {
-public:
-    static void updateDatabaseMetadata(const char* data, size_t length) {
-        // Process SQL metadata
-    }
-};
-
-class SQLQueryHandler {
-public:
-    static void processDatabaseQuery(const char* data, size_t length) {
-        // Process SQL query
-    }
-};
+#include "sql_metadata_processor.cpp"
+#include "sql_query_processor.cpp"
 
 void processNetworkData()
 {
@@ -43,7 +30,7 @@ void processNetworkData()
                 if (bytesReceived > 0) {
                     buf[bytesReceived] = '\0';
                     // Call first SQL injection sink
-                    SQLMetadataHandler::updateDatabaseMetadata(buf, bytesReceived);
+                    SQLMetadataHandler::updateDatabaseMetadata(buf);
                 }
             }
             close(sock);
