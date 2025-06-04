@@ -29,25 +29,112 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          # Install MSYS2 and required packages
+          choco install msys2 -y
+          $env:Path += ";C:\msys64\usr\bin"
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-curl mingw-w64-x86_64-openssl
+          
+          # Add MinGW to PATH
+          $env:Path += ";C:\msys64\mingw64\bin"
+          
+          # Create Windows-specific header files
+          New-Item -ItemType Directory -Force -Path "windows_headers"
+          @"
+#ifndef _WINDOWS_SOCKET_H
+#define _WINDOWS_SOCKET_H
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+#endif
+"@ | Out-File -FilePath "windows_headers/socket.h" -Encoding ASCII
+          
+          @"
+#ifndef _WINDOWS_CURL_H
+#define _WINDOWS_CURL_H
+#include <curl/curl.h>
+#pragma comment(lib, "libcurl.lib")
+#endif
+"@ | Out-File -FilePath "windows_headers/curl.h" -Encoding ASCII
+          
+          @"
+#ifndef _WINDOWS_DLFCN_H
+#define _WINDOWS_DLFCN_H
+#include <windows.h>
+#define RTLD_LAZY 0
+#define RTLD_NOW 0
+#define RTLD_GLOBAL 0
+#define RTLD_LOCAL 0
+void* dlopen(const char* filename, int flags) {
+    return LoadLibraryA(filename);
+}
+void* dlsym(void* handle, const char* symbol) {
+    return GetProcAddress((HMODULE)handle, symbol);
+}
+int dlclose(void* handle) {
+    return FreeLibrary((HMODULE)handle);
+}
+char* dlerror(void) {
+    static char error[256];
+    FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
+                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                   error, sizeof(error), NULL);
+    return error;
+}
+#endif
+"@ | Out-File -FilePath "windows_headers/dlfcn.h" -Encoding ASCII
+
       - name: Download and Install Coverity Tool
+        shell: pwsh
         run: |
+          # Download Coverity tool
           Invoke-WebRequest -Uri "https://scan.coverity.com/download/win64" -Method Post -Body "token=${{ secrets.COVERITY_TOKEN }}&project=${{ github.repository }}" -OutFile "coverity_tool.zip"
+          
+          # Create directory and extract
           New-Item -ItemType Directory -Path "coverity_tool" -Force | Out-Null
-          Expand-Archive -Force coverity_tool.zip coverity_tool
-          $Env:PATH = "$PWD\coverity_tool\bin;$Env:PATH"
+          Expand-Archive -Force coverity_tool.zip -DestinationPath "coverity_tool"
+          
+          # Add to PATH and verify installation
+          $env:Path = "$PWD\coverity_tool\bin;$env:Path"
           Write-Output "Coverity Tool installed successfully"
-      - name: Build with Coverity
+          Get-ChildItem -Path "$PWD\coverity_tool\bin"
+
+      - name: Create Windows main file
+        shell: pwsh
         run: |
+          @"
+#include <windows.h>
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    return 0;
+}
+"@ | Out-File -FilePath "windows_main.cpp" -Encoding ASCII
+
+      - name: Build with Coverity
+        shell: pwsh
+        run: |
+          # Get the full path to cov-build.exe
+          $covBuildPath = (Get-ChildItem -Path "$PWD\coverity_tool\bin" -Filter "cov-build.exe" -Recurse).FullName
+          Write-Output "Using Coverity build tool at: $covBuildPath"
+          
+          # Build each directory
           Get-ChildItem -Directory | ForEach-Object {
             $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
             if ($CppFile) {
-               coverity_tool/bin/cov-build.exe --dir cov-int gcc $CppFile.FullName -o '$($_.Name).exe'
+              Write-Output "Building $($CppFile.FullName)"
+              & $covBuildPath --dir "cov-int" g++ -I"$PWD/windows_headers" $CppFile.FullName windows_main.cpp -o "$($_.Name).exe" -lws2_32 -lcurl
             }
           }
+
       - name: Compress with bzip2
+        shell: pwsh
         run: |
           Compress-Archive -Path cov-int -DestinationPath myproject.zip
         id: compress
+
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -59,6 +146,7 @@ jobs:
           body: "Automated Coverity Scan Results"
           draft: false
           prerelease: false
+
       - name: Upload Asset to Release
         uses: actions/upload-release-asset@v1
         env:
@@ -68,7 +156,9 @@ jobs:
           asset_path: myproject.zip
           asset_name: myproject.zip
           asset_content_type: application/x-bzip2
+
       - name: Notify Coverity Scan
+        shell: pwsh
         run: |
           Invoke-WebRequest -Uri "https://scan.coverity.com/builds" -Method Post -Body @{
             project     = "${{ github.repository }}"
