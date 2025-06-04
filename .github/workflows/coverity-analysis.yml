@@ -40,24 +40,37 @@ jobs:
           New-Item -ItemType Directory -Path "coverity_tool" -Force | Out-Null
           Expand-Archive -Force coverity_tool.zip -DestinationPath "coverity_tool"
           
-          # Add to PATH and verify installation
-          $env:Path = "$PWD\coverity_tool\bin;$env:Path"
-          Write-Output "Coverity Tool installed successfully"
+          # List contents to verify structure
+          Write-Output "Contents of coverity_tool directory:"
+          Get-ChildItem -Path "coverity_tool" -Recurse | Select-Object FullName
           
-          # Verify the tool exists
-          $covBuildPath = Join-Path $PWD "coverity_tool\bin\cov-build.exe"
-          if (Test-Path $covBuildPath) {
+          # Find cov-build.exe in the extracted directory
+          $covBuildPath = Get-ChildItem -Path "coverity_tool" -Recurse -Filter "cov-build.exe" | Select-Object -First 1 -ExpandProperty FullName
+          
+          if ($covBuildPath) {
             Write-Output "Found Coverity build tool at: $covBuildPath"
+            # Add the directory containing cov-build.exe to PATH
+            $covBuildDir = Split-Path -Parent $covBuildPath
+            $env:Path = "$covBuildDir;$env:Path"
           } else {
-            Write-Error "Coverity build tool not found at: $covBuildPath"
+            Write-Error "Coverity build tool not found in extracted files"
+            Write-Output "Current directory structure:"
+            Get-ChildItem -Path "coverity_tool" -Recurse | Format-Table -Property FullName
             exit 1
           }
 
       - name: Build with Coverity
         shell: pwsh
         run: |
-          # Get the full path to cov-build.exe
-          $covBuildPath = Join-Path $PWD "coverity_tool\bin\cov-build.exe"
+          # Find cov-build.exe again to ensure we have the correct path
+          $covBuildPath = Get-ChildItem -Path "coverity_tool" -Recurse -Filter "cov-build.exe" | Select-Object -First 1 -ExpandProperty FullName
+          
+          if (-not $covBuildPath) {
+            Write-Error "Coverity build tool not found"
+            exit 1
+          }
+          
+          Write-Output "Using Coverity build tool at: $covBuildPath"
           
           # Build each directory
           Get-ChildItem -Directory | ForEach-Object {
