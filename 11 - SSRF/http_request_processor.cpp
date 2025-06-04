@@ -3,6 +3,9 @@
 #include <windows.h>
 
 #pragma comment(lib, "libcurl.lib")
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "wldap32.lib")
+#pragma comment(lib, "crypt32.lib")
 
 class HTTPRequestHandler {
 private:
