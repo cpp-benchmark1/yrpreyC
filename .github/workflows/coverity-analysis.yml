@@ -29,25 +29,51 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+
       - name: Download and Install Coverity Tool
+        shell: pwsh
         run: |
+          # Download Coverity tool
           Invoke-WebRequest -Uri "https://scan.coverity.com/download/win64" -Method Post -Body "token=${{ secrets.COVERITY_TOKEN }}&project=${{ github.repository }}" -OutFile "coverity_tool.zip"
+          
+          # Create directory and extract
           New-Item -ItemType Directory -Path "coverity_tool" -Force | Out-Null
-          Expand-Archive -Force coverity_tool.zip coverity_tool
-          $Env:PATH = "$PWD\coverity_tool\bin;$Env:PATH"
+          Expand-Archive -Force coverity_tool.zip -DestinationPath "coverity_tool"
+          
+          # Add to PATH and verify installation
+          $env:Path = "$PWD\coverity_tool\bin;$env:Path"
           Write-Output "Coverity Tool installed successfully"
+          
+          # Verify the tool exists
+          $covBuildPath = Join-Path $PWD "coverity_tool\bin\cov-build.exe"
+          if (Test-Path $covBuildPath) {
+            Write-Output "Found Coverity build tool at: $covBuildPath"
+          } else {
+            Write-Error "Coverity build tool not found at: $covBuildPath"
+            exit 1
+          }
+
       - name: Build with Coverity
+        shell: pwsh
         run: |
+          # Get the full path to cov-build.exe
+          $covBuildPath = Join-Path $PWD "coverity_tool\bin\cov-build.exe"
+          
+          # Build each directory
           Get-ChildItem -Directory | ForEach-Object {
             $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
             if ($CppFile) {
-               coverity_tool/bin/cov-build.exe --dir cov-int gcc $CppFile.FullName -o '$($_.Name).exe'
+              Write-Output "Building $($CppFile.FullName)"
+              & "$covBuildPath" --dir "cov-int" gcc $CppFile.FullName -o "$($_.Name).exe"
             }
           }
+
       - name: Compress with bzip2
+        shell: pwsh
         run: |
           Compress-Archive -Path cov-int -DestinationPath myproject.zip
         id: compress
+
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -59,6 +85,7 @@ jobs:
           body: "Automated Coverity Scan Results"
           draft: false
           prerelease: false
+
       - name: Upload Asset to Release
         uses: actions/upload-release-asset@v1
         env:
@@ -68,7 +95,9 @@ jobs:
           asset_path: myproject.zip
           asset_name: myproject.zip
           asset_content_type: application/x-bzip2
+
       - name: Notify Coverity Scan
+        shell: pwsh
         run: |
           Invoke-WebRequest -Uri "https://scan.coverity.com/builds" -Method Post -Body @{
             project     = "${{ github.repository }}"
