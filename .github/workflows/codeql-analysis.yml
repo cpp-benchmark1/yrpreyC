@@ -30,91 +30,20 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: 'recursive'
-    
-    - name: Install dependencies
-      shell: pwsh
-      run: |
-        # Install MSYS2 and required packages
-        choco install msys2 -y
-        $env:Path += ";C:\msys64\usr\bin"
-        pacman -Syu --noconfirm
-        pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-curl mingw-w64-x86_64-openssl
-        
-        # Add MinGW to PATH
-        $env:Path += ";C:\msys64\mingw64\bin"
-        
-        # Create Windows-specific header files
-        New-Item -ItemType Directory -Force -Path "windows_headers"
-        @"
-#ifndef _WINDOWS_SOCKET_H
-#define _WINDOWS_SOCKET_H
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "ws2_32.lib")
-#endif
-"@ | Out-File -FilePath "windows_headers/socket.h" -Encoding ASCII
-        
-        @"
-#ifndef _WINDOWS_CURL_H
-#define _WINDOWS_CURL_H
-#include <curl/curl.h>
-#pragma comment(lib, "libcurl.lib")
-#endif
-"@ | Out-File -FilePath "windows_headers/curl.h" -Encoding ASCII
-        
-        @"
-#ifndef _WINDOWS_DLFCN_H
-#define _WINDOWS_DLFCN_H
-#include <windows.h>
-#define RTLD_LAZY 0
-#define RTLD_NOW 0
-#define RTLD_GLOBAL 0
-#define RTLD_LOCAL 0
-void* dlopen(const char* filename, int flags) {
-    return LoadLibraryA(filename);
-}
-void* dlsym(void* handle, const char* symbol) {
-    return GetProcAddress((HMODULE)handle, symbol);
-}
-int dlclose(void* handle) {
-    return FreeLibrary((HMODULE)handle);
-}
-char* dlerror(void) {
-    static char error[256];
-    FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
-                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                   error, sizeof(error), NULL);
-    return error;
-}
-#endif
-"@ | Out-File -FilePath "windows_headers/dlfcn.h" -Encoding ASCII
-
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
-
     - if: matrix.build-mode == 'manual'
       shell: pwsh
       run: |
-        # Create a Windows-specific main file
-        @"
-#include <windows.h>
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    return 0;
-}
-"@ | Out-File -FilePath "windows_main.cpp" -Encoding ASCII
-
-        # Compile each directory
         Get-ChildItem -Directory | ForEach-Object {
           $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
           if ($CppFile) {
-            # Add include path for Windows headers
-            g++ -I"$PWD/windows_headers" $CppFile.FullName windows_main.cpp -o "$($_.Name).exe" -lws2_32 -lcurl
+            gcc $CppFile.FullName -o "$($_.Name).exe"
           }
         }
-
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
