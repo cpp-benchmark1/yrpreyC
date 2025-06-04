@@ -54,7 +54,7 @@ jobs:
             $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
             if ($CppFile) {
               Write-Output "Building $($CppFile.FullName)"
-              & "$covBuildPath" --dir "cov-int" g++ -I"C:\msys64\mingw64\include" -I"C:\msys64\mingw64\include\libmongoc-1.0" -I"C:\msys64\mingw64\include\curl" $CppFile.FullName -o "$($_.Name).exe" -L"C:\msys64\mingw64\lib" -lmongoc-1.0 -lcurl -lssl -lcrypto -lws2_32
+              & $covBuildPath --dir "cov-int" g++ -I"C:\msys64\mingw64\include" -I"C:\msys64\mingw64\include\libmongoc-1.0" -I"C:\msys64\mingw64\include\curl" $CppFile.FullName -o "$($_.Name).exe" -L"C:\msys64\mingw64\lib" -lmongoc-1.0 -lcurl -lssl -lcrypto -lws2_32
             }
           }
 
