@@ -41,24 +41,6 @@ jobs:
           
           # Add MinGW to PATH
           $env:Path += ";C:\msys64\mingw64\bin"
-          
-          # Create include directories
-          New-Item -ItemType Directory -Force -Path "include" | Out-Null
-          New-Item -ItemType Directory -Force -Path "include\curl" | Out-Null
-          
-          # Copy curl headers
-          Copy-Item "C:\msys64\mingw64\include\curl\*" -Destination "include\curl" -Recurse -Force
-          
-          # Create Windows-specific header files
-          New-Item -ItemType Directory -Force -Path "windows_headers" | Out-Null
-          @"
-#ifndef _WINDOWS_SOCKET_H
-#define _WINDOWS_SOCKET_H
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "ws2_32.lib")
-#endif
-"@ | Out-File -FilePath "windows_headers/socket.h" -Encoding ASCII
 
       - name: Download and Install Coverity Tool
         shell: pwsh
@@ -107,8 +89,7 @@ jobs:
             $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
             if ($CppFile) {
               Write-Output "Building $($CppFile.FullName)"
-              # Add include paths and libraries
-              & "$covBuildPath" --dir "cov-int" g++ -I"$PWD/include" -I"$PWD/windows_headers" -I"C:\msys64\mingw64\include" $CppFile.FullName -o "$($_.Name).exe" -lws2_32 -lcurl -lssl -lcrypto
+              & "$covBuildPath" --dir "cov-int" g++ $CppFile.FullName -o "$($_.Name).exe"
             }
           }
 
