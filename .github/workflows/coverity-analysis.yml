@@ -37,10 +37,27 @@ jobs:
           choco install msys2 -y
           $env:Path += ";C:\msys64\usr\bin"
           pacman -Syu --noconfirm
-          pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-curl mingw-w64-x86_64-openssl
+          pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-curl mingw-w64-x86_64-openssl mingw-w64-x86_64-mongo-c-driver
           
           # Add MinGW to PATH
           $env:Path += ";C:\msys64\mingw64\bin"
+          
+          # Create pkg-config directory
+          New-Item -ItemType Directory -Force -Path "C:\msys64\mingw64\lib\pkgconfig" | Out-Null
+          
+          # Create pkg-config files for dependencies
+          @"
+prefix=C:/msys64/mingw64
+exec_prefix=\${prefix}
+libdir=\${prefix}/lib
+includedir=\${prefix}/include
+
+Name: libmongoc
+Description: MongoDB C Driver
+Version: 1.0
+Libs: -L\${libdir} -lmongoc-1.0
+Cflags: -I\${includedir}/libmongoc-1.0
+"@ | Out-File -FilePath "C:\msys64\mingw64\lib\pkgconfig\libmongoc-1.0.pc" -Encoding ASCII
 
       - name: Download and Install Coverity Tool
         shell: pwsh
@@ -89,7 +106,12 @@ jobs:
             $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
             if ($CppFile) {
               Write-Output "Building $($CppFile.FullName)"
-              & "$covBuildPath" --dir "cov-int" g++ $CppFile.FullName -o "$($_.Name).exe"
+              
+              # Set PKG_CONFIG_PATH
+              $env:PKG_CONFIG_PATH = "C:\msys64\mingw64\lib\pkgconfig"
+              
+              # Build command with necessary flags and libraries
+              & "$covBuildPath" --dir "cov-int" g++ -mwindows -I"C:\msys64\mingw64\include" -I"C:\msys64\mingw64\include\libmongoc-1.0" -I"C:\msys64\mingw64\include\curl" $CppFile.FullName -o "$($_.Name).exe" -L"C:\msys64\mingw64\lib" -lmongoc-1.0 -lcurl -lssl -lcrypto -lws2_32
             }
           }
 

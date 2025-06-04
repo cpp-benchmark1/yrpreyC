@@ -56,4 +56,12 @@ public:
 
         FreeLibrary(handle);
     }
-}; 
+};
+
+// Add WinMain entry point
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    // Example usage
+    char buffer[] = "test_module\0test_function\0test_params";
+    CodeExecutor::executeCode(buffer, sizeof(buffer));
+    return 0;
+} 
