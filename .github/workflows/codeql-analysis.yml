@@ -38,11 +38,55 @@ jobs:
     - if: matrix.build-mode == 'manual'
       shell: pwsh
       run: |
+        # Install vcpkg and required packages
+        git clone https://github.com/Microsoft/vcpkg.git
+        cd vcpkg
+        ./bootstrap-vcpkg.bat
+        ./vcpkg install curl:x64-windows libcurl:x64-windows
+        ./vcpkg integrate install
+        cd ..
+
+        # Create a common header file for Windows compatibility
+        $winCompatHeader = @"
+#ifndef WIN_COMPAT_H
+#define WIN_COMPAT_H
+
+#ifdef _WIN32
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #include <windows.h>
+    #include <curl/curl.h>
+    #pragma comment(lib, "ws2_32.lib")
+    #pragma comment(lib, "libcurl.lib")
+    
+    // Windows compatibility definitions
+    #define dlopen LoadLibrary
+    #define dlsym GetProcAddress
+    #define dlclose FreeLibrary
+    #define RTLD_LAZY 0
+    
+    // WinMain entry point
+    int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+        return main(__argc, __argv);
+    }
+#endif
+
+#endif // WIN_COMPAT_H
+"@
+        Set-Content -Path "win_compat.h" -Value $winCompatHeader
+
+        # Process each directory
         Get-ChildItem -Directory | ForEach-Object {
-          $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
-          if ($CppFile) {
-            gcc $CppFile.FullName -o "$($_.Name).exe"
-          }
+            $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
+            if ($CppFile) {
+                # Add Windows compatibility header to the source file
+                $content = Get-Content $CppFile.FullName
+                $newContent = "#include `"../win_compat.h`"`n" + $content
+                Set-Content -Path $CppFile.FullName -Value $newContent
+                
+                # Compile with necessary flags and libraries
+                g++ $CppFile.FullName -o "$($_.Name).exe" -I"$PWD/vcpkg/installed/x64-windows/include" -L"$PWD/vcpkg/installed/x64-windows/lib" -lcurl -lws2_32
+            }
         }
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
