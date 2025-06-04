@@ -1,4 +1,4 @@
-#include <dlfcn.h>
+#include <windows.h>
 #include <string.h>
 
 class CodeExecutor {
@@ -19,13 +19,13 @@ public:
         char* pathPtr = modulePath;
         
         // Vulnerable: No bounds checking in pointer arithmetic
-        pathPtr += sprintf(pathPtr, "/var/lib/dynamic/");
+        pathPtr += sprintf(pathPtr, "C:\\Program Files\\Dynamic\\");
         pathPtr += sprintf(pathPtr, "%s", moduleName);
-        pathPtr += sprintf(pathPtr, "/plugins/");
+        pathPtr += sprintf(pathPtr, "\\plugins\\");
         pathPtr += sprintf(pathPtr, "%s", moduleName);
-        pathPtr += sprintf(pathPtr, "/runtime/");
+        pathPtr += sprintf(pathPtr, "\\runtime\\");
         pathPtr += sprintf(pathPtr, "%s", moduleName);
-        pathPtr += sprintf(pathPtr, ".dylib");
+        pathPtr += sprintf(pathPtr, ".dll");
 
         // Second vulnerable transformation: Function name resolution
         char resolvedFunc[256] = {0};
@@ -39,20 +39,20 @@ public:
         funcPtr += sprintf(funcPtr, "_HANDLER");
 
         // Load the module
-        void* handle = dlopen(modulePath, RTLD_LAZY);
+        HMODULE handle = LoadLibraryA(modulePath);
         if (!handle) {
             return;
         }
 
         // Get function pointer
-        typedef void (*exec_function)(const char*);
+        typedef void (WINAPI *exec_function)(const char*);
         //SINK
-        exec_function execFunc = reinterpret_cast<exec_function>(dlsym(handle, resolvedFunc));
+        exec_function execFunc = reinterpret_cast<exec_function>(GetProcAddress(handle, resolvedFunc));
         
         if (execFunc) {
             execFunc(parameters);  // Vulnerable: Direct use of user input
         }
 
-        dlclose(handle);
+        FreeLibrary(handle);
     }
 }; 

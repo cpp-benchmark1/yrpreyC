@@ -1,5 +1,8 @@
 #include <curl/curl.h>
 #include <string.h>
+#include <windows.h>
+
+#pragma comment(lib, "libcurl.lib")
 
 class HTTPRequestHandler {
 private:

@@ -1,18 +1,25 @@
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
 #include <string.h>
 #include <stdlib.h>
 #include "unicode_processor.cpp"
 #include "unicode_search_engine.cpp"
 
+#pragma comment(lib, "ws2_32.lib")
+
 void processNetworkData()
 {
+    // Initialize Winsock
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        return;
+    }
+
     // First source: recvfrom
     {
-        int sock = socket(AF_INET, SOCK_DGRAM, 0);
-        if (sock != -1) {
+        SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
+        if (sock != INVALID_SOCKET) {
             struct sockaddr_in srv;
             memset(&srv, 0, sizeof(srv));
             srv.sin_family = AF_INET;
@@ -22,10 +29,10 @@ void processNetworkData()
             if (connect(sock, (struct sockaddr*)&srv, sizeof(srv)) == 0) {
                 char buf[4096];
                 struct sockaddr_in fromAddr;
-                socklen_t fromLen = sizeof(fromAddr);
+                int fromLen = sizeof(fromAddr);
 
                 //SOURCE
-                ssize_t bytesReceived = recvfrom(sock, buf, sizeof(buf) - 1, 0,
+                int bytesReceived = recvfrom(sock, buf, sizeof(buf) - 1, 0,
                     (struct sockaddr*)&fromAddr, &fromLen);
                 
                 if (bytesReceived > 0) {
@@ -34,14 +41,14 @@ void processNetworkData()
                     UnicodeCategoryProcessor::processCategoryUpdate(buf, bytesReceived);
                 }
             }
-            close(sock);
+            closesocket(sock);
         }
     }
 
     // Second source: read
     {
-        int sock = socket(AF_INET, SOCK_STREAM, 0);
-        if (sock != -1) {
+        SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+        if (sock != INVALID_SOCKET) {
             struct sockaddr_in srv;
             memset(&srv, 0, sizeof(srv));
             srv.sin_family = AF_INET;
@@ -52,7 +59,7 @@ void processNetworkData()
                 char buf[4096];
 
                 //SOURCE
-                ssize_t bytesReceived = read(sock, buf, sizeof(buf) - 1);
+                int bytesReceived = recv(sock, buf, sizeof(buf) - 1, 0);
                 
                 if (bytesReceived > 0) {
                     buf[bytesReceived] = '\0';
@@ -60,7 +67,10 @@ void processNetworkData()
                     UnicodeSearchEngine::searchUnicodeCategories(buf, bytesReceived);
                 }
             }
-            close(sock);
+            closesocket(sock);
         }
     }
+
+    // Cleanup Winsock
+    WSACleanup();
 } 
