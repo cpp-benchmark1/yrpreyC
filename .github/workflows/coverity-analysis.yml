@@ -12,7 +12,7 @@ on:
         default: "c-cpp"
 jobs:
   coverity:
-    runs-on: windows-latest
+    runs-on: ubuntu-24.04
     permissions:
       security-events: write
       packages: read
@@ -25,42 +25,31 @@ jobs:
           submodules: 'recursive'
 
       - name: Install dependencies
-        shell: pwsh
         run: |
-          choco install msys2 -y
-          $env:Path += ";C:\msys64\usr\bin"
-          pacman -Syu --noconfirm
-          pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-curl mingw-w64-x86_64-openssl mingw-w64-x86_64-mongo-c-driver
-          $env:Path += ";C:\msys64\mingw64\bin"
+          # Update package lists and install required libraries for building and linking
+          sudo apt update
+          sudo apt install -y build-essential libcurl4-openssl-dev libssl-dev libmongoc-dev
 
       - name: Download and Install Coverity Tool
-        shell: pwsh
         run: |
-          Invoke-WebRequest -Uri "https://scan.coverity.com/download/win64" -Method Post -Body "token=${{ secrets.COVERITY_TOKEN }}&project=${{ github.repository }}" -OutFile "coverity_tool.zip"
-          New-Item -ItemType Directory -Path "coverity_tool" -Force | Out-Null
-          Expand-Archive -Force coverity_tool.zip -DestinationPath "coverity_tool"
-          $Env:PATH = "$PWD\coverity_tool\bin;$Env:PATH"
-          Write-Output "Coverity Tool installed successfully"
+          # Download and extract the Coverity analysis tool
+          wget https://scan.coverity.com/download/linux64 \
+            --post-data "token=${{ secrets.COVERITY_TOKEN }}&project=${{ github.repository }}" \
+            -O coverity_tool.tgz
+          mkdir coverity_tool
+          tar -xvzf coverity_tool.tgz -C coverity_tool --strip-components=1
+          export PATH=$PWD/coverity_tool/bin:$PATH
+          echo "Coverity Tool installed successfully"
 
       - name: Build with Coverity
-        shell: pwsh
         run: |
-          $covBuildPath = Get-ChildItem -Path "coverity_tool" -Recurse -Filter "cov-build.exe" | Select-Object -First 1 -ExpandProperty FullName
-          if (-not $covBuildPath) {
-            Write-Error "Coverity build tool not found"
-            exit 1
-          }
-          Get-ChildItem -Directory | ForEach-Object {
-            $CppFile = Get-ChildItem -Path $_.FullName -Filter *.cpp | Select-Object -First 1
-            if ($CppFile) {
-              Write-Output "Building $($CppFile.FullName)"
-              & $covBuildPath --dir "cov-int" g++ -I"C:\msys64\mingw64\include" -I"C:\msys64\mingw64\include\libmongoc-1.0" -I"C:\msys64\mingw64\include\curl" $CppFile.FullName -o "$($_.Name).exe" -L"C:\msys64\mingw64\lib" -lmongoc-1.0 -lcurl -lssl -lcrypto -lws2_32
-            }
-          }
+          # Build all .cpp files with required libraries, capturing the build with Coverity
+          coverity_tool/bin/cov-build --dir cov-int bash -c 'find . -name "*.cpp" -exec g++ {} -o {}.out -lcurl -lssl -lmongoc-1.0 \;'
 
       - name: Compress with bzip2
         run: |
-          Compress-Archive -Path cov-int -DestinationPath myproject.zip
+          # Compress the Coverity intermediate directory for upload
+          tar cjvf myproject.tar.bz2 cov-int
         id: compress
 
       - name: Create GitHub Release
@@ -81,17 +70,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: myproject.zip
-          asset_name: myproject.zip
+          asset_path: myproject.tar.bz2
+          asset_name: myproject.tar.bz2
           asset_content_type: application/x-bzip2
 
       - name: Notify Coverity Scan
         run: |
-          Invoke-WebRequest -Uri "https://scan.coverity.com/builds" -Method Post -Body @{
-            project     = "${{ github.repository }}"
-            token       = "${{ secrets.COVERITY_TOKEN }}"
-            email       = "cpp.benchmark@proton.me"
-            url         = "https://github.com/${{ github.repository }}/releases/download/coverity-scan-${{ github.run_id }}/myproject.zip"
-            version     = "1.0"
-            description = "Automated Coverity Scan"
-          }
+          # Notify Coverity Scan service with the results
+          curl --data "project=${{ github.repository }}&token=${{ secrets.COVERITY_TOKEN }}&email=cpp.benchmark@proton.me&url=https://github.com/${{ github.repository }}/releases/download/coverity-scan-${{ github.run_id }}/myproject.tar.bz2&version=1.0&description=Automated+Coverity+Scan" https://scan.coverity.com/builds
