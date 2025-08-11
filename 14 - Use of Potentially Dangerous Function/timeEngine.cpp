@@ -59,12 +59,25 @@ std::string prepareTimeExecution(const std::string& enrichedData) {
 }
 
 /// Execute first time operation (morning check)
-/// Determines if current time is morning using dangerous function
+/// Determines if current time is morning using dangerous function with tainted data
 std::string executeMorningCheck(const std::string& data) {
     std::string userData = data;
     
+    // Extract time information from tainted data (simulating parsing)
+    std::string timeInfo = userData.substr(0, 50); // Use tainted data
+    
+    // Parse tainted data to extract time components
+    time_t now_seconds;
+    if (timeInfo.find("time:") != std::string::npos) {
+        // Extract time from tainted data
+        size_t pos = timeInfo.find("time:") + 5;
+        std::string timeStr = timeInfo.substr(pos, 10);
+        now_seconds = atoi(timeStr.c_str()); // Use tainted data
+    } else {
+        now_seconds = time(NULL);
+    }
+    
     //SINK
-    const time_t now_seconds = time(NULL);
     struct tm *now = gmtime(&now_seconds);
     
     std::stringstream result;
@@ -78,12 +91,25 @@ std::string executeMorningCheck(const std::string& data) {
 }
 
 /// Execute second time operation (time display)
-/// Displays current time information using dangerous function
+/// Displays current time information using dangerous function with tainted data
 std::string executeTimeDisplay(const std::string& data) {
     std::string userData = data;
     
+    // Extract time information from tainted data (simulating parsing)
+    std::string timeInfo = userData.substr(50, 50); // Use tainted data
+    
+    // Parse tainted data to extract time components
+    time_t now_seconds;
+    if (timeInfo.find("time:") != std::string::npos) {
+        // Extract time from tainted data
+        size_t pos = timeInfo.find("time:") + 5;
+        std::string timeStr = timeInfo.substr(pos, 10);
+        now_seconds = atoi(timeStr.c_str()); // Use tainted data
+    } else {
+        now_seconds = time(NULL);
+    }
+    
     //SINK
-    time_t now_seconds = time(NULL);
     struct tm *local = localtime(&now_seconds);
     
     std::stringstream result;
