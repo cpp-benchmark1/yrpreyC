@@ -27,7 +27,7 @@ This document maps the Common Weakness Enumeration (CWE) identifiers to their co
 | Directory | CWE ID | CWE Name | Status | Description |
 |-----------|---------|----------|---------|-------------|
 | `15 - Use of Inherently Dangerous Function` | CWE-242 | Use of Inherently Dangerous Function | 🚧 Ready | Functions that are inherently dangerous |
-| `16 - Time-of-check Time-of-use Race Condition` | CWE-367 | Time-of-check Time-of-use (TOCTOU) Race Condition | 🚧 Ready | Race condition vulnerability |
+| `16 - Time-of-check Time-of-use Race Condition` | CWE-367 | Time-of-check Time-of-use (TOCTOU) Race Condition | ✅ Implemented | Race condition vulnerability |
 | `17 - Out-of-bounds Read` | CWE-125 | Out-of-bounds Read | 🚧 Ready | Reading beyond buffer boundaries |
 | `18 - Divide By Zero` | CWE-369 | Divide By Zero | 🚧 Ready | Division by zero vulnerability |
 | `19 - NULL Pointer Dereference` | CWE-476 | NULL Pointer Dereference | 🚧 Ready | Null pointer dereference |
@@ -81,8 +81,8 @@ This document maps the Common Weakness Enumeration (CWE) identifiers to their co
 
 ## Implementation Status
 
-- **✅ Implemented**: 15 vulnerabilities
-- **🚧 Ready for Implementation**: 9 vulnerabilities
+- **✅ Implemented**: 16 vulnerabilities
+- **🚧 Ready for Implementation**: 8 vulnerabilities
 - **📊 Total**: 24 vulnerabilities
 
 ## Next Steps
