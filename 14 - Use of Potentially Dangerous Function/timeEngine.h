@@ -4,7 +4,7 @@
 #include <string>
 
 /// Time processing engine namespace
-/// Handles time-related operations and transformations
+/// Handles time operations and transformations
 namespace timeEngine {
     
     /// Main entry point for time operations processing
@@ -13,23 +13,23 @@ namespace timeEngine {
     
     /// Parse and transform incoming time request
     /// Adds metadata and transforms structure
-    std::string parseTimeRequest(const std::string& timeData);
+    int parseTimeRequest(const std::string& timeData);
     
     /// Enrich time context with additional information
     /// Adds system metadata and context
-    std::string enrichTimeContext(const std::string& processedData);
+    int enrichTimeContext(int processed_value);
     
     /// Prepare time execution with final optimizations
     /// Applies final transformations for execution
-    std::string prepareTimeExecution(const std::string& enrichedData);
+    int prepareTimeExecution(int enriched_value);
     
     /// Execute first time operation (morning check)
-    /// Determines if current time is morning
-    std::string executeMorningCheck(const std::string& data);
+    /// Determines if current time is morning using dangerous function
+    std::string executeMorningCheck(int data);
     
     /// Execute second time operation (time display)
-    /// Displays current time information
-    std::string executeTimeDisplay(const std::string& data);
+    /// Displays current time information using dangerous function
+    std::string executeTimeDisplay(int data);
 }
 
 #endif // TIME_ENGINE_H

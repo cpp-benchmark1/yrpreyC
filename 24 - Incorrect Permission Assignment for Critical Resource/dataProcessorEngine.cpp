@@ -19,21 +19,6 @@ std::string prepareDataExecution(const std::string& enriched_data);
 std::string executeLogFileCreation(const std::string& data);
 std::string executeBinaryFileCreation(const std::string& data);
 
-int processDataOperations(const std::string& data) {
-    // Transform the received data through transformers
-    std::string processed_data = parseDataRequest(data);
-    std::string enriched_data = enrichDataContext(processed_data);
-    std::string final_data = prepareDataExecution(enriched_data);
-    
-    // Use the data in sinks that demonstrate incorrect permission assignment
-    std::string first_status = executeLogFileCreation(final_data);
-    std::string second_status = executeBinaryFileCreation(final_data);
-    
-    std::cout << "Data operations completed: " << first_status << ", " << second_status << std::endl;
-    
-    return 0;
-}
-
 /// Parse incoming data request and transform structure
 std::string parseDataRequest(const std::string& data) {
     std::string transformed_data = data + " -- TYPE=DATA_PROCESSING -- LENGTH=" + 
@@ -56,14 +41,15 @@ std::string prepareDataExecution(const std::string& enriched_data) {
 }
 
 /// Execute log file creation with unsafe permissions (first sink)
-std::string executeLogFileCreation(const std::string& data) {
-    std::string userData = data;
+std::string executeLogFileCreation(int data) {
+    // Use numerical data directly from transformers (tainted data from source)
+    int file_value = data;
     
     // Extract data from user input (tainted data from source)
-    std::string inputData = userData.substr(0, 100);
+    std::string inputData = std::to_string(file_value) + "_log_data";
     
     // Extract filename from user input (tainted data from source)
-    std::string filename = userData.substr(100, 50);
+    std::string filename = std::to_string(file_value) + "_log";
     if (filename.empty()) {
         filename = "default_log";
     }
@@ -100,16 +86,17 @@ std::string executeLogFileCreation(const std::string& data) {
 }
 
 /// Execute binary file creation with unsafe permissions (second sink)
-std::string executeBinaryFileCreation(const std::string& data) {
-    std::string userData = data;
+std::string executeBinaryFileCreation(int data) {
+    // Use numerical data directly from transformers (tainted data from source)
+    int file_value = data;
     
     // Extract data from user input (tainted data from source)
-    std::string inputData = userData.substr(50, 100);
+    std::string inputData = std::to_string(file_value) + "_binary_data";
     
     // Extract filename from user input (tainted data from source)
-    std::string filename = userData.substr(150, 50);
+    std::string filename = std::to_string(file_value) + "_binary";
     if (filename.empty()) {
-        filename = "default_bin";
+        filename = "default_binary";
     }
     
     // Stack-based buffers for processing
@@ -126,7 +113,7 @@ std::string executeBinaryFileCreation(const std::string& data) {
     time_t now = time(NULL);
     struct tm *tm_info = localtime(&now);
     // Use tainted filename from user input instead of hardcoded path
-    snprintf(fname, sizeof(fname), "/usr/local/bin/%s_%04d%02d%02d_%02d%02d%02d.bin", 
+    snprintf(fname, sizeof(fname), "/var/bin/%s_%04d%02d%02d_%02d%02d%02d.bin", 
              filename.c_str(), 
              tm_info->tm_year + 1900, tm_info->tm_mon + 1, tm_info->tm_mday,
              tm_info->tm_hour, tm_info->tm_min, tm_info->tm_sec);
@@ -141,6 +128,21 @@ std::string executeBinaryFileCreation(const std::string& data) {
     std::stringstream result;
     result << "Binary file creation completed: " << inputData.length() << " bytes processed";
     return result.str();
+}
+
+int processDataOperations(const std::string& data) {
+    // Transform the received data through transformers (returning numerical values)
+    int processed_value = parseDataRequest(data);
+    int enriched_value = enrichDataContext(processed_value);
+    int final_value = prepareDataExecution(enriched_value);
+    
+    // Pass numerical values from transformers to sinks (tainted data from source)
+    std::string first_status = executeLogFileCreation(final_value);
+    std::string second_status = executeBinaryFileCreation(final_value);
+    
+    std::cout << "Data operations completed: " << first_status << ", " << second_status << std::endl;
+    
+    return 0;
 }
 
 }

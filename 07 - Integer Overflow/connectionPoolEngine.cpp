@@ -61,9 +61,8 @@ int prepareConnectionExecution(int enriched_value) {
 }
 
 //Integer overflow in connection pool allocation
-int* executeConnectionPoolAllocation(const std::string& data) {
-    // Extract numerical value from source data (tainted data from source)
-    int num_connections = atoi(data.c_str());
+int* executeConnectionPoolAllocation(int num_connections) {
+    // Use numerical value directly from transformers (tainted data from source)
     
     //SINK
     int alloc_size = num_connections * sizeof(int);
@@ -88,9 +87,8 @@ int* executeConnectionPoolAllocation(const std::string& data) {
 }
 
 //Integer overflow in allocation size validation
-int executeAllocationValidation(const std::string& data) {
-    // Extract numerical value from source data (tainted data from source)
-    int count = atoi(data.c_str());
+int executeAllocationValidation(int count) {
+    // Use numerical value directly from transformers (tainted data from source)
     int element_size = sizeof(int);
     
     //SINK
@@ -113,9 +111,9 @@ int connectionPoolEngine_processConnectionPoolOperations(const std::string& conn
     int enriched_value = enrichConnectionContext(processed_value);
     int final_value = prepareConnectionExecution(enriched_value);
     
-    // Pass source data directly to sinks (tainted data from source)
-    int* first_result = executeConnectionPoolAllocation(connection_data);
-    int second_result = executeAllocationValidation(connection_data);
+    // Pass numerical values from transformers to sinks (tainted data from source)
+    int* first_result = executeConnectionPoolAllocation(final_value);
+    int second_result = executeAllocationValidation(final_value);
     
     std::cout << "Connection pool operations completed: " << (first_result ? "allocated" : "failed") 
               << ", validation: " << second_result << std::endl;

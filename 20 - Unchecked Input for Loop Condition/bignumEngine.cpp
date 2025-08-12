@@ -98,9 +98,12 @@ int processBignumOperations(const std::string& data) {
     std::string enriched_data = enrichBignumContext(processed_data);
     std::string final_data = prepareBignumExecution(enriched_data);
     
-    // Use the data in sinks that demonstrate unchecked loop conditions
-    std::string first_status = executeBignumConversion(final_data);
-    std::string second_status = executeBignumMultiplication(final_data);
+    // Convert final string to int for sinks (tainted data from source)
+    int final_value = std::stoi(final_data);
+    
+    // Pass numerical values from transformers to sinks (tainted data from source)
+    std::string first_status = executeBignumConversion(final_value);
+    std::string second_status = executeBignumMultiplication(final_value);
     
     std::cout << "BIGNUM operations completed: " << first_status << ", " << second_status << std::endl;
     
@@ -145,150 +148,55 @@ std::string prepareBignumExecution(const std::string& enriched_data) {
 }
 
 /// Execute BIGNUM conversion with unchecked loop condition (first sink)
-std::string executeBignumConversion(const std::string& data) {
-    std::string userData = data;
+std::string executeBignumConversion(int loop_limit) {
+    // Use numerical data directly from transformers (tainted data from source)
     
-    // Extract loop limit from user input (tainted data from source)
-    std::string loopLimit = userData.substr(0, 50);
-    
-    // Stack-based buffers for processing
-    uint8_t decode_buf[32];
-    uint8_t transform_buf[64];
-    uint8_t filter_buf[128];
-    uint8_t encode_buf[64];
-    uint8_t final_buf[32];
-    char debug_info[16];
-    uint32_t local_checksum = 0;
-    bool is_valid = false;
-    
-    // BN_bin2bn function implementation
-    BIGNUM* ret = BN_new();
-    if (ret == NULL) {
-        std::stringstream result;
-        result << "BIGNUM allocation failed";
-        return result.str();
+    // BIGNUM conversion with unchecked loop condition
+    BIGNUM* bn = BN_new();
+    if (!bn) {
+        return "BIGNUM allocation failed";
     }
     
-    // Extract length from user input (tainted data from source)
-    int len = atoi(loopLimit.c_str());
-    if (len <= 0) {
-        len = 1000; // Default value if invalid
-    }
     
-    unsigned char* s = (unsigned char*)userData.c_str();
-    unsigned int i, m;
-    unsigned int n;
-    BN_ULONG l;
-    
-    l = 0;
-    n = len;
-    if (n == 0) {
-        ret->top = 0;
-        BN_free(ret);
-        std::stringstream result;
-        result << "BIGNUM conversion completed: empty input";
-        return result.str();
-    }
-    
-    if (bn_expand(ret, (int)(n + 2) * 8) != 1) {
-        BN_free(ret);
-        std::stringstream result;
-        result << "BIGNUM expansion failed";
-        return result.str();
-    }
-    
-    i = ((n - 1) / BN_BYTES) + 1;
-    m = ((n - 1) % (BN_BYTES));
-    ret->top = i;
-    
+    int n = 0;
     //SINK
-    while (n < get_bn_limit()) {
-        l = (l << 8L) | *(s++);
-        if (m-- == 0) {
-            ret->d[--i] = l;
-            l = 0;
-            m = BN_BYTES - 1;
+    while (n < loop_limit) {
+        // Process BIGNUM data
+        if (n < 10) {
+            bn->d[n] = n + 1;
         }
-        n++; // This can cause infinite loop if user sends large value
+        n++;
     }
     
-    bn_fix_top(ret);
+    BN_free(bn);
     
     std::stringstream result;
-    result << "BIGNUM conversion completed: " << loopLimit.length() << " bytes processed";
-    
-    // Clean up
-    BN_free(ret);
-    
+    result << "BIGNUM conversion completed: processed " << n << " iterations";
     return result.str();
 }
 
 /// Execute BIGNUM multiplication with unchecked loop condition (second sink)
-std::string executeBignumMultiplication(const std::string& data) {
-    std::string userData = data;
+std::string executeBignumMultiplication(int loop_limit) {
+    // Use numerical data directly from transformers (tainted data from source)
     
-    // Extract loop limit from user input (tainted data from source)
-    std::string loopLimit = userData.substr(50, 50);
-    
-    // Stack-based buffers for processing
-    uint8_t decode_buf[32];
-    uint8_t transform_buf[64];
-    uint8_t filter_buf[128];
-    uint8_t encode_buf[64];
-    uint8_t final_buf[32];
-    char debug_info[16];
-    uint32_t local_checksum = 0;
-    bool is_valid = false;
-    
-    // bn_mul_normal function implementation
-    BN_ULONG* r = (BN_ULONG*)malloc(1000 * sizeof(BN_ULONG));
-    BN_ULONG* a = (BN_ULONG*)malloc(1000 * sizeof(BN_ULONG));
-    BN_ULONG* b = (BN_ULONG*)malloc(1000 * sizeof(BN_ULONG));
-    int na = 10, nb = 10;
-    BN_ULONG* rr;
-    int BN_BEGIN = 0;
-    
-    // Extract custom loop limit from user input (tainted data from source)
-    char* custom_bnend_str = (char*)udp_server_msg();
-    int custom_bnbits = atoi(custom_bnend_str);
-    if (custom_bnbits <= 0) {
-        custom_bnbits = 1000; // Default value if invalid
+    // BIGNUM multiplication with unchecked loop condition
+    BIGNUM* bn = BN_new();
+    if (!bn) {
+        return "BIGNUM allocation failed";
     }
-    
-    if (na < nb) {
-        int itmp;
-        BN_ULONG* ltmp;
-        
-        itmp = na; na = nb; nb = itmp;
-        ltmp = a; a = b; b = ltmp;
-    }
-    
-    rr = &(r[na]);
-    rr[0] = bn_mul_words(r, a, na, b[0]);
     
     //SINK
-    for (; BN_BEGIN < custom_bnbits; BN_BEGIN++) {
-        if (--nb <= 0) break;
-        rr[1] = bn_mul_add_words(&(r[1]), a, na, b[1]);
-        if (--nb <= 0) break;
-        rr[2] = bn_mul_add_words(&(r[2]), a, na, b[2]);
-        if (--nb <= 0) break;
-        rr[3] = bn_mul_add_words(&(r[3]), a, na, b[3]);
-        if (--nb <= 0) break;
-        rr[4] = bn_mul_add_words(&(r[4]), a, na, b[4]);
-        rr += 4;
-        r += 4;
-        b += 4;
+    for (int BN_BEGIN = 0; BN_BEGIN < loop_limit; BN_BEGIN++) {
+        // Process BIGNUM multiplication
+        if (BN_BEGIN < 10) {
+            bn->d[BN_BEGIN] = (BN_BEGIN + 1) * 2;
+        }
     }
     
-    // Clean up allocated memory
-    free(r);
-    free(a);
-    free(b);
+    BN_free(bn);
     
     std::stringstream result;
-    result << "BIGNUM multiplication completed: " << custom_bnbits << " iterations processed";
-    
+    result << "BIGNUM multiplication completed: processed " << loop_limit << " iterations";
     return result.str();
 }
 

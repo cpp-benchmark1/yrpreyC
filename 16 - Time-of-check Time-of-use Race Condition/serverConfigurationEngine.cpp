@@ -11,21 +11,21 @@
 namespace serverConfigurationEngine {
 
 // Forward declarations
-std::string parseConfigurationRequest(const std::string& config_data);
-std::string enrichConfigurationContext(const std::string& processed_data);
-std::string prepareConfigurationExecution(const std::string& enriched_data);
-std::string executeConfigurationRetrieval(const std::string& data);
-std::string executeFileContentRetrieval(const std::string& data);
+int parseConfigurationRequest(const std::string& config_data);
+int enrichConfigurationContext(int processed_value);
+int prepareConfigurationExecution(int enriched_value);
+std::string executeConfigurationRetrieval(int data);
+std::string executeFileContentRetrieval(int data);
 
 int processConfigurationOperations(const std::string& config_data) {
-    // Transform the received data through transformers
-    std::string processed_data = parseConfigurationRequest(config_data);
-    std::string enriched_data = enrichConfigurationContext(processed_data);
-    std::string final_data = prepareConfigurationExecution(enriched_data);
+    // Transform the received data through transformers (now returning numerical values)
+    int processed_value = parseConfigurationRequest(config_data);
+    int enriched_value = enrichConfigurationContext(processed_value);
+    int final_value = prepareConfigurationExecution(enriched_value);
     
-    // Use the data in sinks that demonstrate race condition
-    std::string first_status = executeConfigurationRetrieval(final_data);
-    std::string second_status = executeFileContentRetrieval(final_data);
+    // Pass numerical values from transformers to sinks (tainted data from source)
+    std::string first_status = executeConfigurationRetrieval(final_value);
+    std::string second_status = executeFileContentRetrieval(final_value);
     
     std::cout << "Configuration operations completed: " << first_status << ", " << second_status << std::endl;
     
@@ -33,32 +33,55 @@ int processConfigurationOperations(const std::string& config_data) {
 }
 
 /// Parse incoming configuration request and transform structure
-std::string parseConfigurationRequest(const std::string& config_data) {
-    std::string transformed_data = config_data + " -- TYPE=CONFIGURATION_OPERATION -- LENGTH=" + 
-                                 std::to_string(config_data.length());
-    return transformed_data;
+int parseConfigurationRequest(const std::string& config_data) {
+    // Extract numerical value from source input (tainted data from source)
+    int extracted_value = 0;
+    
+    // Try to extract first number from the string
+    for (char c : config_data) {
+        if (c >= '0' && c <= '9') {
+            extracted_value = extracted_value * 10 + (c - '0');
+        } else if (extracted_value > 0) {
+            break;  // Stop at first non-digit after finding a number
+        }
+    }
+    
+    // If no number found, use default value
+    if (extracted_value == 0) {
+        extracted_value = 100;  // Default value
+    }
+    
+    // Return extracted numerical value from source
+    return extracted_value;
 }
 
 /// Enrich configuration context with additional metadata
-std::string enrichConfigurationContext(const std::string& processed_data) {
-    time_t now = time(NULL);
-    std::string enriched_data = processed_data + " -- TIMESTAMP=" + std::to_string(now) + 
-                               " -- SYSTEM=CONFIGURATION_MANAGER";
-    return enriched_data;
+int enrichConfigurationContext(int processed_value) {
+    // Mathematical transformation: XOR with config magic number and bit shifting
+    int enriched_value = processed_value ^ 0xCAFEBABE;
+    enriched_value = (enriched_value << 2) + 19;
+    
+    // Return numerical value for mathematical operations
+    return enriched_value;
 }
 
 /// Prepare configuration execution with final optimizations
-std::string prepareConfigurationExecution(const std::string& enriched_data) {
-    std::string final_data = "SECURE_" + enriched_data + "_VALIDATED";
-    return final_data;
+int prepareConfigurationExecution(int enriched_value) {
+    // Mathematical transformation: modular arithmetic and bit operations
+    int final_value = (enriched_value * 11) % 1500;
+    final_value = final_value | 0x2F;
+    
+    // Return numerical value for mathematical operations
+    return final_value;
 }
 
 /// Execute configuration retrieval operation
-std::string executeConfigurationRetrieval(const std::string& data) {
-    std::string userData = data;
+std::string executeConfigurationRetrieval(int data) {
+    // Use numerical data directly from transformers (tainted data from source)
+    int config_value = data;
     
     // Extract filename from user data (tainted data from source)
-    std::string filename = userData.substr(0, 50);
+    std::string filename = std::to_string(config_value) + "_config.yml";
     
     static char failResponse[256];
     snprintf(failResponse, sizeof(failResponse), "Failed to get server configuration");
@@ -101,11 +124,12 @@ std::string executeConfigurationRetrieval(const std::string& data) {
 }
 
 /// Execute file content retrieval operation
-std::string executeFileContentRetrieval(const std::string& data) {
-    std::string userData = data;
+std::string executeFileContentRetrieval(int data) {
+    // Use numerical data directly from transformers (tainted data from source)
+    int config_value = data;
     
     // Extract filename from user data (tainted data from source)
-    std::string filename = userData.substr(50, 50);
+    std::string filename = std::to_string(config_value) + "_content.yml";
     
     static char failResponse[256];
     snprintf(failResponse, sizeof(failResponse), "Failed to get file content");
@@ -118,6 +142,8 @@ std::string executeFileContentRetrieval(const std::string& data) {
         result << "File does not exist: " << filename.length() << " bytes processed";
         return result.str();
     }
+    
+    // AN ATTACKER COULD CHANGE THE STATE OF THE FILE IN THIS MEANTIME
     
     // Read file content
     //SINK
