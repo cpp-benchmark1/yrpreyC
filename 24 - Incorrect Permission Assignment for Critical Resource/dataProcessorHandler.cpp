@@ -14,7 +14,6 @@ int dataProcessorHandler_processDataStream(void) {
     char buffer[1024];
     
     //SOURCE
-    // Receive data via read()
     ssize_t read_result = read(fd, buffer, sizeof(buffer) - 1);
     
     if (read_result > 0) {
