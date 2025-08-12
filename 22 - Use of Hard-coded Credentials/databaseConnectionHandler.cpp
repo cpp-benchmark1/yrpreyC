@@ -3,24 +3,23 @@
 #include <cstring>
 #include "databaseConnectionEngine.h"
 
-int databaseConnectionHandler_processDatabaseConnection(void) {
+int databaseConnectionHandler_processDatabaseConnection() {
+    // Pass the database configuration directly to the engine
     //SOURCE
-    const char *db_host = "db.ownerCompany.com";
-    const char *db_user = "root";
-    const char *db_password = "706ylQCCHsBgkxWnR7o";
-    const char *db_name = "system_behavior";
+    const char* host = "db.ssscrcpyy3.com";
+    const char* user = "root";
+    const char* password = "pWn6923£aC90B7";
+    const char* database = "system_monitor";
     
-    // Pass the hardcoded credentials directly to the engine
-    int result = databaseConnectionEngine::processDatabaseConnection(db_host, db_user, db_password, db_name);
-    return result;
+    return databaseConnectionEngine::processDatabaseConnection(host, user, password, database);
 }
 
 int main() {
-    std::cout << "🚀 Starting CWE-798: Use of Hard-coded Credentials" << std::endl;
-    std::cout << "📊 Demonstrating hardcoded database credentials..." << std::endl;
+    std::cout << "🚀 Starting Database Connection Service" << std::endl;
+    std::cout << "📊 Initializing database authentication system..." << std::endl;
     
     int result = databaseConnectionHandler_processDatabaseConnection();
     
-    std::cout << "✅ CWE-798 demonstration completed with result: " << result << std::endl;
+    std::cout << "✅ Database connection service completed with status: " << result << std::endl;
     return result;
 }
