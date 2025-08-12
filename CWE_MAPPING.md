@@ -31,7 +31,7 @@ This document maps the Common Weakness Enumeration (CWE) identifiers to their co
 | `17 - Out-of-bounds Read` | CWE-125 | Out-of-bounds Read | 🚧 Ready | Reading beyond buffer boundaries |
 | `18 - Divide By Zero` | CWE-369 | Divide By Zero | 🚧 Ready | Division by zero vulnerability |
 | `19 - NULL Pointer Dereference` | CWE-476 | NULL Pointer Dereference | 🚧 Ready | Null pointer dereference |
-| `20 - Unchecked Input for Loop Condition` | CWE-606 | Unchecked Input for Loop Condition | 🚧 Ready | Loop condition validation |
+| `20 - Unchecked Input for Loop Condition` | CWE-606 | Unchecked Input for Loop Condition | ✅ Implemented | Loop condition validation |
 | `21 - Memory Allocation with Excessive Size Value` | CWE-789 | Memory Allocation with Excessive Size Value | ✅ Implemented | Excessive memory allocation |
 | `22 - Use of Hard-coded Credentials` | CWE-798 | Use of Hard-coded Credentials | ✅ Implemented | Hard-coded credentials |
 | `23 - Improper Restriction of XML External Entity Reference` | CWE-611 | Improper Restriction of XML External Entity Reference | 🚧 Ready | XXE vulnerability |
@@ -81,8 +81,8 @@ This document maps the Common Weakness Enumeration (CWE) identifiers to their co
 
 ## Implementation Status
 
-- **✅ Implemented**: 18 vulnerabilities
-- **🚧 Ready for Implementation**: 6 vulnerabilities
+- **✅ Implemented**: 19 vulnerabilities
+- **🚧 Ready for Implementation**: 5 vulnerabilities
 - **📊 Total**: 24 vulnerabilities
 
 ## Next Steps
