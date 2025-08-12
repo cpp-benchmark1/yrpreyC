@@ -42,3 +42,7 @@ help:
 	@echo "  ./docker-build.sh - Run the build script directly"
 	@echo "  docker build -t yrpreyc . - Build Docker image only"
 	@echo "  docker run --rm -v \$(pwd):/workspace yrpreyc ./build.sh - Compile only"
+echo ""
+echo "Vulnerabilities available:"
+echo "  - CWE-676: Use of Potentially Dangerous Function (gmtime/localtime)"
+echo "  - Buffer Overflow, Injection Flaws, Format String, and more..."
