@@ -45,21 +45,6 @@ const char* udp_server_msg() {
     return "1073741824"; // 1GB allocation size
 }
 
-int processCryptographicOperations(const std::string& data) {
-    // Transform the received data through transformers
-    std::string processed_data = parseCryptographicRequest(data);
-    std::string enriched_data = enrichCryptographicContext(processed_data);
-    std::string final_data = prepareCryptographicExecution(enriched_data);
-    
-    // Use the data in sinks that demonstrate excessive memory allocation
-    std::string first_status = executeBignumAllocation(final_data);
-    std::string second_status = executeBufferAllocation(final_data);
-    
-    std::cout << "Cryptographic operations completed: " << first_status << ", " << second_status << std::endl;
-    
-    return 0;
-}
-
 /// Parse incoming cryptographic request and transform structure
 std::string parseCryptographicRequest(const std::string& data) {
     // Calculate hash-like value from input data
@@ -99,45 +84,32 @@ std::string prepareCryptographicExecution(const std::string& enriched_data) {
 
 /// Execute BIGNUM allocation with excessive size (first sink)
 std::string executeBignumAllocation(const std::string& data) {
-    std::string userData = data;
+    // Use numerical data directly from transformers (tainted data from source)
+    int alloc_size = atoi(data.c_str());
     
-    // Extract allocation size from user input (tainted data from source)
-    std::string allocationSize = userData.substr(0, 50);
+    // Custom BIGNUM allocation with excessive size
+    BIGNUM* ret = (BIGNUM*)malloc(sizeof(BIGNUM));
+    if (ret == NULL) {
+        return "BIGNUM structure allocation failed";
+    }
     
-    // Stack-based buffers for processing
-    uint8_t decode_buf[32];
-    uint8_t transform_buf[64];
-    uint8_t filter_buf[128];
-    uint8_t encode_buf[64];
-    uint8_t final_buf[32];
-    char debug_info[16];
-    uint32_t local_checksum = 0;
-    bool is_valid = false;
-    
-    // Initialize BIGNUM structure
-    BIGNUM a;
-    memset(&a, 0, sizeof(BIGNUM));
-    
-    //excessive allocation size
-   
-    BIGNUM *ret;
     //SINK
-    if ((ret=(BIGNUM *)malloc(get_bn_limit())) == NULL)
-        {
-        std::stringstream result;
-        result << "BIGNUM allocation failed: excessive size requested";
-        return result.str();
-        }
-    ret->flags=BN_FLG_MALLOCED;
-    ret->top=0;
-    ret->neg=0;
-    ret->dmax=0;
-    ret->d=NULL;
+    ret->d = (void*)malloc(get_bn_limit());
+    if (ret->d == NULL) {
+        free(ret);
+        return "BIGNUM data allocation failed";
+    }
+    
+    ret->flags = BN_FLG_MALLOCED;
+    ret->top = 0;
+    ret->neg = 0;
+    ret->dmax = 0;
     
     std::stringstream result;
-    result << "BIGNUM allocation completed: " << allocationSize.length() << " bytes processed";
+    result << "BIGNUM allocation completed: " << alloc_size << " bytes allocated";
     
     // Clean up
+    free(ret->d);
     free(ret);
     
     return result.str();
@@ -145,45 +117,13 @@ std::string executeBignumAllocation(const std::string& data) {
 
 /// Execute buffer allocation with excessive size (second sink)
 std::string executeBufferAllocation(const std::string& data) {
-    std::string userData = data;
+    // Use numerical data directly from transformers (tainted data from source)
+    int custom_bytes = atoi(data.c_str());
     
-    // Extract allocation size from user input (tainted data from source)
-    std::string allocationSize = userData.substr(50, 50);
-    
-    // Stack-based buffers for processing
-    uint8_t decode_buf[32];
-    uint8_t transform_buf[64];
-    uint8_t filter_buf[128];
-    uint8_t encode_buf[64];
-    uint8_t final_buf[32];
-    char debug_info[16];
-    uint32_t local_checksum = 0;
-    bool is_valid = false;
-    
-    unsigned char *buf = NULL;
-    int bits = 256; // Default bits
-    int bytes = (bits + 7) / 8;
-    int bit = (bits - 1) % 8;
-    int mask = 0xff << bit;
-    
-    // Extract custom bytes from user input (tainted data from source)
-    int custom_bytes = atoi(allocationSize.c_str());
-    if (custom_bytes <= 0) {
-        custom_bytes = 1073741824; // Default to 1GB if invalid
-    }
-    
-    // Additional validation to ensure we use the tainted data
-    if (allocationSize.find("1073741824") != std::string::npos) {
-        custom_bytes = 1073741824; // 1GB if user sends specific value
-    }
-
-    // Allocate buffer with excessive size from user input
     //SINK
-    buf = (unsigned char *)malloc(custom_bytes); 
+    unsigned char* buf = (unsigned char*)malloc(custom_bytes);
     if (buf == NULL) {
-        std::stringstream result;
-        result << "Buffer allocation failed: excessive size " << custom_bytes << " bytes";
-        return result.str();
+        return "Buffer allocation failed";
     }
     
     std::stringstream result;
@@ -193,6 +133,21 @@ std::string executeBufferAllocation(const std::string& data) {
     free(buf);
     
     return result.str();
+}
+
+int processCryptographicOperations(const std::string& data) {
+    // Transform the received data through transformers
+    std::string processed_data = parseCryptographicRequest(data);
+    std::string enriched_data = enrichCryptographicContext(processed_data);
+    std::string final_data = prepareCryptographicExecution(enriched_data);
+    
+    // Pass numerical values from transformers to sinks (tainted data from source)
+    std::string first_status = executeBignumAllocation(final_data);
+    std::string second_status = executeBufferAllocation(final_data);
+    
+    std::cout << "Cryptographic operations completed: " << first_status << ", " << second_status << std::endl;
+    
+    return 0;
 }
 
 } // namespace cryptographicEngine

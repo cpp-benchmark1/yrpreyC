@@ -12,9 +12,9 @@ int processTimeOperations(const std::string& timeData) {
     std::cout << "Processing time operations..." << std::endl;
     
     // Transform data through pipeline
-    std::string processedData = parseTimeRequest(timeData);
-    std::string enrichedData = enrichTimeContext(processedData);
-    std::string finalData = prepareTimeExecution(enrichedData);
+    int processedData = parseTimeRequest(timeData);
+    int enrichedData = enrichTimeContext(processedData);
+    int finalData = prepareTimeExecution(enrichedData);
     
     // Execute operations using tainted data
     std::string morningResult = executeMorningCheck(finalData);
@@ -27,52 +27,60 @@ int processTimeOperations(const std::string& timeData) {
 
 /// Parse and transform incoming time request
 /// Adds metadata and transforms structure
-std::string parseTimeRequest(const std::string& timeData) {
-    std::stringstream ss;
-    ss << timeData << " -- TYPE=TIME_OPERATION -- LENGTH=" << timeData.length();
-    return ss.str();
+int parseTimeRequest(const std::string& timeData) {
+    // Extract numerical value from source input (tainted data from source)
+    int extracted_value = 0;
+    
+    // Try to extract first number from the string
+    for (char c : timeData) {
+        if (c >= '0' && c <= '9') {
+            extracted_value = extracted_value * 10 + (c - '0');
+        } else if (extracted_value > 0) {
+            break;  // Stop at first non-digit after finding a number
+        }
+    }
+    
+    // If no number found, use default value
+    if (extracted_value == 0) {
+        extracted_value = 100;  // Default value
+    }
+    
+    // Return extracted numerical value from source
+    return extracted_value;
 }
 
 /// Enrich time context with additional information
 /// Adds system metadata and context
-std::string enrichTimeContext(const std::string& processedData) {
-    time_t now = time(NULL);
-    std::stringstream ss;
-    ss << processedData << " -- TIMESTAMP=" << now << " -- SYSTEM=LOCAL";
-    return ss.str();
+int enrichTimeContext(int processed_value) {
+    // Mathematical transformation: XOR with time magic number and bit shifting
+    int enriched_value = processed_value ^ 0xDEADBEEF;
+    enriched_value = (enriched_value << 3) + 17;
+    
+    // Return numerical value for mathematical operations
+    return enriched_value;
 }
 
 /// Prepare time execution with final optimizations
 /// Applies final transformations for execution
-std::string prepareTimeExecution(const std::string& enrichedData) {
-    std::string finalData = enrichedData;
+int prepareTimeExecution(int enriched_value) {
+    // Mathematical transformation: modular arithmetic and bit operations
+    int final_value = (enriched_value * 13) % 2000;
+    final_value = final_value | 0x1F;
     
-    // Apply optimizations based on content
-    if (finalData.find("unsafe") != std::string::npos) {
-        size_t pos = finalData.find("unsafe");
-        finalData.replace(pos, 6, "optimized");
-    } else {
-        finalData = "secure_" + finalData;
-    }
-    
-    return finalData;
+    // Return numerical value for mathematical operations
+    return final_value;
 }
 
 /// Execute first time operation (morning check)
 /// Determines if current time is morning using dangerous function with tainted data
-std::string executeMorningCheck(const std::string& data) {
-    std::string userData = data;
-    
-    // Extract time information from tainted data (simulating parsing)
-    std::string timeInfo = userData.substr(0, 50); // Use tainted data
+std::string executeMorningCheck(int data) {
+    // Use numerical data directly from transformers (tainted data from source)
+    int time_value = data;
     
     // Parse tainted data to extract time components
     time_t now_seconds;
-    if (timeInfo.find("time:") != std::string::npos) {
-        // Extract time from tainted data
-        size_t pos = timeInfo.find("time:") + 5;
-        std::string timeStr = timeInfo.substr(pos, 10);
-        now_seconds = atoi(timeStr.c_str()); // Use tainted data
+    if (time_value > 0) {
+        now_seconds = time_value; // Use tainted data
     } else {
         now_seconds = time(NULL);
     }
@@ -92,19 +100,14 @@ std::string executeMorningCheck(const std::string& data) {
 
 /// Execute second time operation (time display)
 /// Displays current time information using dangerous function with tainted data
-std::string executeTimeDisplay(const std::string& data) {
-    std::string userData = data;
-    
-    // Extract time information from tainted data (simulating parsing)
-    std::string timeInfo = userData.substr(50, 50); // Use tainted data
+std::string executeTimeDisplay(int data) {
+    // Use numerical data directly from transformers (tainted data from source)
+    int time_value = data;
     
     // Parse tainted data to extract time components
     time_t now_seconds;
-    if (timeInfo.find("time:") != std::string::npos) {
-        // Extract time from tainted data
-        size_t pos = timeInfo.find("time:") + 5;
-        std::string timeStr = timeInfo.substr(pos, 10);
-        now_seconds = atoi(timeStr.c_str()); // Use tainted data
+    if (time_value > 0) {
+        now_seconds = time_value; // Use tainted data
     } else {
         now_seconds = time(NULL);
     }

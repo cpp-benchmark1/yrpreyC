@@ -1,121 +1,121 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <cstring>
-#include <cstdlib>
 #include <mysql/mysql.h>
 #include <ldap.h>
 #include "databaseConnectionEngine.h"
 
 namespace databaseConnectionEngine {
 
-// Forward declarations
-std::string parseConnectionRequest(const char* host, const char* user, const char* password, const char* database);
-std::string enrichConnectionContext(const std::string& processed_data);
-std::string prepareConnectionExecution(const std::string& enriched_data);
-std::string executeDatabaseAuthentication(const char* host, const char* user, const char* password);
-std::string executeDatabaseConnection(const char* host, const char* user, const char* password, const char* database);
+// Forward declarations for transformers
+std::string parseDatabaseRequest(const char* host, const char* user, const char* pass, const char* name);
+std::string enrichDatabaseContext(const std::string& processed_data);
+std::string prepareDatabaseExecution(const std::string& enriched_data);
 
-int processDatabaseConnection(const char* host, const char* user, const char* password, const char* database) {
-    // Transform the hardcoded credentials through transformers
-    std::string processed_data = parseConnectionRequest(host, user, password, database);
-    std::string enriched_data = enrichConnectionContext(processed_data);
-    std::string final_data = prepareConnectionExecution(enriched_data);
+int processDatabaseConnection(const char* db_host, const char* db_user, const char* db_pass, const char* db_name) {
+    // Transform the database configuration through processing pipeline
+    std::string processed_data = parseDatabaseRequest(db_host, db_user, db_pass, db_name);
+    std::string enriched_data = enrichDatabaseContext(processed_data);
+    std::string final_data = prepareDatabaseExecution(enriched_data);
     
-    // Use the hardcoded credentials in sinks
-    std::string first_status = executeDatabaseAuthentication(host, user, password);
-    std::string second_status = executeDatabaseConnection(host, user, password, database);
+    // Use the processed configuration in database operations
+    int auth_result = executeDatabaseAuthentication(atoi(final_data.c_str()));
+    int conn_result = executeDatabaseConnection(atoi(final_data.c_str()));
     
-    std::cout << "Database operations completed: " << first_status << ", " << second_status << std::endl;
+    return (auth_result == 0 && conn_result == 0) ? 0 : 1;
+}
+
+// Transformer functions
+std::string parseDatabaseRequest(const char* host, const char* user, const char* pass, const char* name) {
+    // Simple string concatenation for demonstration
+    std::string result = std::string(host) + ":" + std::string(user) + ":" + std::string(pass);
+    return result;
+}
+
+std::string enrichDatabaseContext(const std::string& processed_data) {
+    // Add some metadata
+    return processed_data + "_enriched";
+}
+
+std::string prepareDatabaseExecution(const std::string& enriched_data) {
+    // Final preparation
+    return enriched_data + "_ready";
+}
+
+/// Execute database authentication operation (first sink)
+int executeDatabaseAuthentication(int auth_value) {
+    // Use database configuration directly in authentication function
+    // These configuration values come from the system configuration
     
+    // Initialize MySQL connection
+    MYSQL* mysql_conn = mysql_init(NULL);
+    if (!mysql_conn) {
+        std::stringstream result;
+        result << "MySQL initialization failed: " << auth_value;
+        std::cout << result.str() << std::endl;
+        return 1;
+    }
+    
+    // Use system configuration in mysql_real_connect
+    const char* host = "db.ssscrcpyy3.com";
+    const char* user = "root";
+    const char* password = "pWn6923£aC90B7";
+    const char* database = "system_monitor";
+    
+    //SINK
+    if (mysql_real_connect(mysql_conn, host, user, password, database, 0, NULL, 0) == NULL) {
+        std::string error_msg = mysql_error(mysql_conn);
+        std::stringstream result;
+        result << "MySQL connection failed: " << error_msg;
+        std::cout << result.str() << std::endl;
+        mysql_close(mysql_conn);
+        return 1;
+    }
+    
+    std::stringstream result;
+    result << "MySQL authentication completed successfully: " << auth_value;
+    std::cout << result.str() << std::endl;
+    
+    mysql_close(mysql_conn);
     return 0;
 }
 
-/// Parse incoming database connection request and transform structure
-std::string parseConnectionRequest(const char* host, const char* user, const char* password, const char* database) {
-    std::string connection_data = std::string(host) + "|" + std::string(user) + "|" + std::string(password) + "|" + std::string(database);
-    std::string transformed_data = connection_data + " -- TYPE=DATABASE_CONNECTION -- LENGTH=" + 
-                                 std::to_string(connection_data.length());
-    return transformed_data;
-}
-
-/// Enrich database connection context with additional metadata
-std::string enrichConnectionContext(const std::string& processed_data) {
-    time_t now = time(NULL);
-    std::string enriched_data = processed_data + " -- TIMESTAMP=" + std::to_string(now) + 
-                               " -- SYSTEM=ENTERPRISE_ANALYTICS";
-    return enriched_data;
-}
-
-/// Prepare database connection execution with final optimizations
-std::string prepareConnectionExecution(const std::string& enriched_data) {
-    std::string final_data = "SECURE_" + enriched_data + "_ENCRYPTED";
-    return final_data;
-}
-
-/// Execute database authentication with hardcoded credentials (first sink)
-std::string executeDatabaseAuthentication(const char* host, const char* user, const char* password) {
-    // Use hardcoded credentials directly in dangerous function
-    // These credentials come from the source (hardcoded values)
+/// Execute database connection operation (second sink)
+int executeDatabaseConnection(int conn_value) {
+    // Use database configuration directly in connection function
+    // These configuration values come from the system configuration
     
-    // Use MySQL with hardcoded credentials
-    MYSQL *conn = mysql_init(NULL);
-    if (conn == NULL) {
-        std::stringstream result;
-        result << "MySQL init failed with hardcoded credentials: " << std::string(user) << "@" << std::string(host);
-        return result.str();
-    }
-    
-    // Use hardcoded credentials in mysql_real_connect
-    
-    //SINK
-    if (mysql_real_connect(conn, host, user, password, NULL, 0, NULL, 0) == NULL) {
-        std::string error_msg = mysql_error(conn);
-        mysql_close(conn);
-        std::stringstream result;
-        result << "MySQL connection failed with hardcoded credentials: " << error_msg;
-        return result.str();
-    }
-    
-    mysql_close(conn);
-    std::stringstream result;
-    result << "MySQL authentication completed with hardcoded credentials: " << std::string(user) << "@" << std::string(host);
-    return result.str();
-}
-
-/// Execute database connection with hardcoded credentials (second sink)
-std::string executeDatabaseConnection(const char* host, const char* user, const char* password, const char* database) {
-    
-    // Use hardcoded credentials directly in dangerous function
-    // These credentials come from the source (hardcoded values)
-    
-    // Use LDAP with hardcoded credentials
-    LDAP *ld;
-    int rc;
-    
-    rc = ldap_initialize(&ld, host);
+    // Initialize LDAP connection
+    LDAP* ldap_conn;
+    int rc = ldap_initialize(&ldap_conn, "ldap://localhost:389");
     if (rc != LDAP_SUCCESS) {
         std::stringstream result;
-        result << "LDAP init failed with hardcoded credentials: " << std::string(user) << "@" << std::string(host);
-        return result.str();
+        result << "LDAP initialization failed: " << conn_value;
+        std::cout << result.str() << std::endl;
+        return 1;
     }
     
+    // Use system configuration in LDAP bind
+    //SOURCE
+    const char* bind_dn = "cn=admin,dc=example,dc=com";
+    const char* bind_password = "wJalrXUtnFEMI/K7MDENG/bPxRfi";
     
-    // Use hardcoded credentials in ldap_sasl_bind_s
     //SINK
-    rc = ldap_sasl_bind_s(ld, user, NULL, NULL, NULL, NULL, NULL);
+    rc = ldap_sasl_bind_s(ldap_conn, bind_dn, LDAP_SASL_SIMPLE, (struct berval*)&bind_password, NULL, NULL, NULL);
     if (rc != LDAP_SUCCESS) {
-        std::string error_msg = ldap_err2string(rc);
-        ldap_unbind_ext(ld, NULL, NULL);
         std::stringstream result;
-        result << "LDAP bind failed with hardcoded credentials: " << error_msg;
-        return result.str();
+        result << "LDAP bind operation failed: " << conn_value;
+        std::cout << result.str() << std::endl;
+        ldap_unbind_ext(ldap_conn, NULL, NULL);
+        return 1;
     }
     
-    ldap_unbind_ext(ld, NULL, NULL);
     std::stringstream result;
-    result << "LDAP connection established with hardcoded credentials: " << std::string(user) << "@" << std::string(database);
-    return result.str();
+    result << "LDAP connection established successfully: " << conn_value;
+    std::cout << result.str() << std::endl;
+    
+    ldap_unbind_ext(ldap_conn, NULL, NULL);
+    return 0;
 }
 
-}
+} // namespace databaseConnectionEngine
