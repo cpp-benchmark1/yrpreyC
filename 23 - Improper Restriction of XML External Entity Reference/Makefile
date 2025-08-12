@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra
+CXXFLAGS = -std=c++11 -Wall -Wextra -I/usr/include/libxml2
 TARGET = deviceConfigHandler
 SOURCES = deviceConfigHandler.cpp deviceConfigEngine.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
