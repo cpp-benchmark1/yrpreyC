@@ -15,6 +15,10 @@ RUN apt-get update && apt-get install -y \
     unzip \
     python3 \
     python3-pip \
+    libmysqlclient-dev \
+    libldap2-dev \
+    libxml2-dev \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install CodeQL CLI
