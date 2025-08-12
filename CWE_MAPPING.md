@@ -35,7 +35,7 @@ This document maps the Common Weakness Enumeration (CWE) identifiers to their co
 | `21 - Memory Allocation with Excessive Size Value` | CWE-789 | Memory Allocation with Excessive Size Value | 🚧 Ready | Excessive memory allocation |
 | `22 - Use of Hard-coded Credentials` | CWE-798 | Use of Hard-coded Credentials | ✅ Implemented | Hard-coded credentials |
 | `23 - Improper Restriction of XML External Entity Reference` | CWE-611 | Improper Restriction of XML External Entity Reference | 🚧 Ready | XXE vulnerability |
-| `24 - Incorrect Permission Assignment for Critical Resource` | CWE-732 | Incorrect Permission Assignment for Critical Resource | 🚧 Ready | Permission assignment issues |
+| `24 - Incorrect Permission Assignment for Critical Resource` | CWE-732 | Incorrect Permission Assignment for Critical Resource | ✅ Implemented | Permission assignment issues |
 
 ## CWE Categories Covered
 
@@ -81,8 +81,8 @@ This document maps the Common Weakness Enumeration (CWE) identifiers to their co
 
 ## Implementation Status
 
-- **✅ Implemented**: 16 vulnerabilities
-- **🚧 Ready for Implementation**: 8 vulnerabilities
+- **✅ Implemented**: 17 vulnerabilities
+- **🚧 Ready for Implementation**: 7 vulnerabilities
 - **📊 Total**: 24 vulnerabilities
 
 ## Next Steps
