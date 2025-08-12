@@ -208,7 +208,7 @@ int BN_num_bits(const BIGNUM *a) {
     l = a->d[get_custom_num_bits()];
     
     i = (a->top-1) * BN_BITS2;
-    return(i + 8 + (int)l); // Use l to avoid unused variable warning
+    return(i + 8 + (int)l); 
 }
 
 std::string executeBignumBitsCalculation(const std::string& data) {
