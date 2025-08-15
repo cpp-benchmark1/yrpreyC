@@ -6,12 +6,7 @@
 #include <unistd.h>
 #include "resourceMonitorEngine.h"
 
-// Forward declarations for internal functions
-int parseResourceRequest(const std::string& data);
-int enrichResourceContext(int processed_value);
-int prepareResourceExecution(int enriched_value);
-std::string executeResourceCalculation(const std::string& data);
-std::string executeUsageComputation(const std::string& data);
+namespace resourceMonitorEngine {
 
 // Global variable to store resource data from source
 std::string g_resource_message;
@@ -26,35 +21,6 @@ const char* resource_server_msg() {
     return g_resource_message.c_str();
 }
 
-// Transformers
-int parseResourceRequest(const std::string& data) {
-    // Mathematical transformation: calculate hash-like value from input
-    int hash_value = 0;
-    for (char c : data) {
-        hash_value = (hash_value * 31 + c) % 1000000;
-    }
-    
-    // Return numerical value for mathematical operations
-    return hash_value;
-}
-
-int enrichResourceContext(int processed_value) {
-    // Mathematical transformation: XOR with magic number and bit shifting
-    int enriched_value = processed_value ^ 0xDEADBEEF;
-    enriched_value = (enriched_value << 2) + 13;
-    
-    // Return numerical value for mathematical operations
-    return enriched_value;
-}
-
-int prepareResourceExecution(int enriched_value) {
-    // Mathematical transformation: modular arithmetic and bit operations
-    int final_value = (enriched_value * 7) % 1000;
-    final_value = final_value | 0x0F;
-    
-    // Return numerical value for mathematical operations
-    return final_value;
-}
 
 //Network bandwidth calculation with divide by zero
 std::string executeResourceCalculation(int data) {
@@ -110,14 +76,11 @@ std::string executeUsageComputation(int data) {
     return std::string(result_buffer);
 }
 
-int resourceMonitorEngine::processResourceOperations(const std::string& resource_data) {
+int processResourceOperations(const std::string& resource_data) {
     // Set resource message from source data for use in sinks
     set_resource_message(resource_data);
     
-    // Transform the received data through transformers (returning numerical values)
-    int processed_value = parseResourceRequest(resource_data);
-    int enriched_value = enrichResourceContext(processed_value);
-    int final_value = prepareResourceExecution(enriched_value);
+    int final_value = std::stoi(resource_data);
     
     // Pass numerical values from transformers to sinks (tainted data from source)
     std::string first_status = executeResourceCalculation(final_value);
@@ -127,3 +90,5 @@ int resourceMonitorEngine::processResourceOperations(const std::string& resource
     
     return 0;
 }
+
+} // namespace resourceMonitorEngine
