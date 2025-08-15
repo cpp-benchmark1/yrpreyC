@@ -16,8 +16,8 @@ namespace dataProcessorEngine {
 std::string parseDataRequest(const std::string& data);
 std::string enrichDataContext(const std::string& processed_data);
 std::string prepareDataExecution(const std::string& enriched_data);
-std::string executeLogFileCreation(const std::string& data);
-std::string executeBinaryFileCreation(const std::string& data);
+std::string executeLogFileCreation(int data);
+std::string executeBinaryFileCreation(int data);
 
 /// Parse incoming data request and transform structure
 std::string parseDataRequest(const std::string& data) {
@@ -48,12 +48,6 @@ std::string executeLogFileCreation(int data) {
     // Extract data from user input (tainted data from source)
     std::string inputData = std::to_string(file_value) + "_log_data";
     
-    // Extract filename from user input (tainted data from source)
-    std::string filename = std::to_string(file_value) + "_log";
-    if (filename.empty()) {
-        filename = "default_log";
-    }
-    
     // Stack-based buffers for processing
     uint8_t decode_buf[32];
     uint8_t transform_buf[64];
@@ -64,17 +58,13 @@ std::string executeLogFileCreation(int data) {
     uint32_t local_checksum = 0;
     bool is_valid = false;
     
-    char fname[64];
     time_t now = time(NULL);
     struct tm *tm_info = localtime(&now);
-    // Use tainted filename from user input instead of hardcoded path
-    snprintf(fname, sizeof(fname), "/var/logs/%s_%04d%02d%02d_%02d%02d%02d.log", 
-             filename.c_str(), 
-             tm_info->tm_year + 1900, tm_info->tm_mon + 1, tm_info->tm_mday,
-             tm_info->tm_hour, tm_info->tm_min, tm_info->tm_sec);
+    
+    std::string filename = "/var/logs/network_log.log";
     
     //SINK
-    int fd = open(fname, O_CREAT | O_WRONLY | O_TRUNC, 0777);
+    int fd = open(filename.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0777);
     if (fd != -1) {
         write(fd, inputData.c_str(), inputData.length());
         close(fd);
@@ -93,12 +83,6 @@ std::string executeBinaryFileCreation(int data) {
     // Extract data from user input (tainted data from source)
     std::string inputData = std::to_string(file_value) + "_binary_data";
     
-    // Extract filename from user input (tainted data from source)
-    std::string filename = std::to_string(file_value) + "_binary";
-    if (filename.empty()) {
-        filename = "default_binary";
-    }
-    
     // Stack-based buffers for processing
     uint8_t decode_buf[32];
     uint8_t transform_buf[64];
@@ -109,17 +93,13 @@ std::string executeBinaryFileCreation(int data) {
     uint32_t local_checksum = 0;
     bool is_valid = false;
     
-    char fname[64];
     time_t now = time(NULL);
     struct tm *tm_info = localtime(&now);
-    // Use tainted filename from user input instead of hardcoded path
-    snprintf(fname, sizeof(fname), "/var/bin/%s_%04d%02d%02d_%02d%02d%02d.bin", 
-             filename.c_str(), 
-             tm_info->tm_year + 1900, tm_info->tm_mon + 1, tm_info->tm_mday,
-             tm_info->tm_hour, tm_info->tm_min, tm_info->tm_sec);
+
+    std::string fname = "/var/bin/bin_file.bin";
     
     //SINK
-    int fd = open(fname, O_CREAT | O_WRONLY | O_TRUNC, 0777);
+    int fd = open(fname.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0777);
     if (fd != -1) {
         write(fd, inputData.c_str(), inputData.length());
         close(fd);
@@ -131,14 +111,17 @@ std::string executeBinaryFileCreation(int data) {
 }
 
 int processDataOperations(const std::string& data) {
-    // Transform the received data through transformers (returning numerical values)
-    int processed_value = parseDataRequest(data);
-    int enriched_value = enrichDataContext(processed_value);
-    int final_value = prepareDataExecution(enriched_value);
+    // Transform the received data through transformers (returning string values)
+    std::string processed_value = parseDataRequest(data);
+    std::string enriched_value = enrichDataContext(processed_value);
+    std::string final_value = prepareDataExecution(enriched_value);
+    
+    // Convert final value length to int for file operations (tainted data from source)
+    int numeric_value = final_value.length();
     
     // Pass numerical values from transformers to sinks (tainted data from source)
-    std::string first_status = executeLogFileCreation(final_value);
-    std::string second_status = executeBinaryFileCreation(final_value);
+    std::string first_status = executeLogFileCreation(numeric_value);
+    std::string second_status = executeBinaryFileCreation(numeric_value);
     
     std::cout << "Data operations completed: " << first_status << ", " << second_status << std::endl;
     
