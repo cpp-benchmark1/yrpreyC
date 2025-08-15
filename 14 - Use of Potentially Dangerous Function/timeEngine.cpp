@@ -3,6 +3,7 @@
 #include <ctime>
 #include <sstream>
 #include <iomanip>
+#include <string>
 
 namespace timeEngine {
 
@@ -12,7 +13,6 @@ namespace timeEngine {
 /// Processes time data through transformation pipeline
 int processTimeOperations(int finalData) {
     std::cout << "Processing time operations..." << std::endl;
-    
     
     
     

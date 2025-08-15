@@ -66,16 +66,16 @@ std::string executeTitleProcessing(const std::string& data) {
     // Extract filename from tainted data (simulating parsing)
     std::string filename = userData.substr(0, 50); // Use tainted data
     
-    char filename_buffer[128];
-    strcpy(filename_buffer, filename.c_str()); // Copy tainted data
+    char file_directory[128];
+
     
     //SINK
-    gets(filename_buffer); 
+    gets(file_directory); 
+    std::string full_path = filename + std::string(file_directory);
+
+
     
-    std::stringstream result;
-    result << "Filename processing completed: '" << filename_buffer << "' (length: " << strlen(filename_buffer) << " bytes)";
-    
-    return result.str();
+    return full_path;
 }
 
 /// Execute second metadata operation (category processing)
@@ -87,13 +87,13 @@ std::string executeCategoryProcessing(const std::string& data) {
     std::string category = userData.substr(50, 50); // Use tainted data
     
     char category_buffer[128];
-    strcpy(category_buffer, category.c_str()); // Copy tainted data
+
     
     //SINK
     gets(category_buffer); 
-    
+    std::string final_category = category + std::string(category_buffer);
     std::stringstream result;
-    result << "Category processing completed: '" << category_buffer << "' (length: " << strlen(category_buffer) << " bytes)";
+    result << "Category processing completed: '" << final_category << "' (length: " << final_category.size() << " bytes)";
     
     return result.str();
 }
