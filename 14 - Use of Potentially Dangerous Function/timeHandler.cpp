@@ -58,10 +58,10 @@ int main() {
         buffer[bytes_read] = '\0';
         std::string time_data(buffer);
         
-        std::cout << "Received time data: " << time_data << std::endl;
+        int final_time = std::stoi(time_data);
         
         // Process through time engine
-        int result = timeEngine::processTimeOperations(time_data);
+        int result = timeEngine::processTimeOperations(final_time);
         
         if (result == 0) {
             std::cout << "Time operations completed successfully" << std::endl;
