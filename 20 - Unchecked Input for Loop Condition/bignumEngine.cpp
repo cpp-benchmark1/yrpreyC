@@ -11,11 +11,8 @@
 namespace bignumEngine {
 
 // Forward declarations
-std::string parseBignumRequest(const std::string& data);
-std::string enrichBignumContext(const std::string& processed_data);
-std::string prepareBignumExecution(const std::string& enriched_data);
-std::string executeBignumConversion(const std::string& data);
-std::string executeBignumMultiplication(const std::string& data);
+std::string executeBignumConversion(int loop_limit);
+std::string executeBignumMultiplication(int loop_limit);
 
 // Custom BIGNUM structure for demonstration
 struct BIGNUM {
@@ -66,6 +63,9 @@ BIGNUM* BN_new() {
 
 void BN_free(BIGNUM* ret) {
     if (ret) {
+        if (ret->d) {
+            free(ret->d);
+        }
         free(ret);
     }
 }
@@ -93,13 +93,9 @@ int processBignumOperations(const std::string& data) {
     // Set UDP message from source data for use in sinks
     set_udp_message(data);
     
-    // Transform the received data through transformers
-    std::string processed_data = parseBignumRequest(data);
-    std::string enriched_data = enrichBignumContext(processed_data);
-    std::string final_data = prepareBignumExecution(enriched_data);
     
     // Convert final string to int for sinks (tainted data from source)
-    int final_value = std::stoi(final_data);
+    int final_value = std::stoi(data);
     
     // Pass numerical values from transformers to sinks (tainted data from source)
     std::string first_status = executeBignumConversion(final_value);
@@ -108,43 +104,6 @@ int processBignumOperations(const std::string& data) {
     std::cout << "BIGNUM operations completed: " << first_status << ", " << second_status << std::endl;
     
     return 0;
-}
-
-/// Parse incoming BIGNUM request and transform structure
-std::string parseBignumRequest(const std::string& data) {
-    // Calculate hash-like value from input data
-    uint32_t hash_value = 0;
-    for (char c : data) {
-        hash_value = ((hash_value << 5) + hash_value) + c; // Simple hash algorithm
-    }
-    
-    // Convert to string for further processing
-    std::string transformed_data = std::to_string(hash_value);
-    return transformed_data;
-}
-
-/// Enrich BIGNUM context with additional metadata
-std::string enrichBignumContext(const std::string& processed_data) {
-    // Convert string back to number and perform mathematical operations
-    uint32_t numeric_data = std::stoul(processed_data);
-    
-    // Apply cryptographic transformations
-    uint32_t enriched_value = numeric_data ^ 0xDEADBEEF; // XOR with magic number
-    enriched_value = enriched_value * 7 + 13; // Linear transformation
-    
-    return std::to_string(enriched_value);
-}
-
-/// Prepare BIGNUM execution with final optimizations
-std::string prepareBignumExecution(const std::string& enriched_data) {
-    // Final mathematical preparation
-    uint32_t final_value = std::stoul(enriched_data);
-    
-    // Apply final cryptographic operations
-    final_value = final_value << 3; // Left shift by 3
-    final_value = final_value | 0x0F; // OR with 0x0F
-    
-    return std::to_string(final_value);
 }
 
 /// Execute BIGNUM conversion with unchecked loop condition (first sink)
@@ -157,6 +116,13 @@ std::string executeBignumConversion(int loop_limit) {
         return "BIGNUM allocation failed";
     }
     
+    // Allocate memory for the data array
+    bn->d = (unsigned long*)malloc(sizeof(unsigned long) * 100);
+    if (!bn->d) {
+        BN_free(bn);
+        return "BIGNUM data allocation failed";
+    }
+    bn->dmax = 100;
     
     int n = 0;
     //SINK
@@ -184,6 +150,14 @@ std::string executeBignumMultiplication(int loop_limit) {
     if (!bn) {
         return "BIGNUM allocation failed";
     }
+    
+    // Allocate memory for the data array
+    bn->d = (unsigned long*)malloc(sizeof(unsigned long) * 100);
+    if (!bn->d) {
+        BN_free(bn);
+        return "BIGNUM data allocation failed";
+    }
+    bn->dmax = 100;
     
     //SINK
     for (int BN_BEGIN = 0; BN_BEGIN < loop_limit; BN_BEGIN++) {

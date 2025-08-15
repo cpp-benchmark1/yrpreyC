@@ -11,18 +11,6 @@ namespace bignumEngine {
     /// Processes BIGNUM data through transformation pipeline
     int processBignumOperations(const std::string& data);
     
-    /// Parse incoming BIGNUM request and transform structure
-    /// Adds metadata and transforms structure
-    std::string parseBignumRequest(const std::string& data);
-    
-    /// Enrich BIGNUM context with additional metadata
-    /// Adds system metadata and context
-    std::string enrichBignumContext(const std::string& processed_data);
-    
-    /// Prepare BIGNUM execution with final optimizations
-    /// Applies final transformations for execution
-    std::string prepareBignumExecution(const std::string& enriched_data);
-    
     /// Execute BIGNUM conversion operation
     /// Converts BIGNUM using unchecked loop condition vulnerable operations
     std::string executeBignumConversion(int loop_limit);
