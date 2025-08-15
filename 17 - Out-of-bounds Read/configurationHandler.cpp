@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "configurationEngine.h"
+#include "configurationHandler.h"
 
 int configurationHandler_processConfigurationStream(void) {
     char buffer[1024];

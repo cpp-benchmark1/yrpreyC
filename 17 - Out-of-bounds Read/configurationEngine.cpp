@@ -7,13 +7,6 @@
 
 namespace configurationEngine {
 
-// Internal functions
-int parseConfigurationRequest(const std::string& data);
-int enrichConfigurationContext(int processed_value);
-int prepareConfigurationExecution(int enriched_value);
-std::string executeConfigurationRetrieval(int data);
-std::string executeBignumBitsCalculation(int data);
-
 // Configuration functions
 struct t_preconf* t_getpreparam(int config_index);
 int t_getprecount(void);
@@ -81,48 +74,6 @@ struct BIGNUM {
 static struct pre_struct pre_params[100];
 static char modbuf_data[100][256];
 static char genbuf_data[100][256];
-
-
-int parseConfigurationRequest(const std::string& data) {
-    // Extract numerical value from source input (tainted data from source)
-    int extracted_value = 0;
-    
-    // Try to extract first number from the string
-    for (char c : data) {
-        if (c >= '0' && c <= '9') {
-            extracted_value = extracted_value * 10 + (c - '0');
-        } else if (extracted_value > 0) {
-            break;  // Stop at first non-digit after finding a number
-        }
-    }
-    
-    // If no number found, use default value
-    if (extracted_value == 0) {
-        extracted_value = 100;  // Default value
-    }
-    
-    // Return extracted numerical value from source
-    return extracted_value;
-}
-
-int enrichConfigurationContext(int processed_value) {
-    // Mathematical transformation: XOR with config magic number and bit shifting
-    int enriched_value = processed_value ^ 0xDEADBEEF;
-    enriched_value = (enriched_value << 2) + 23;
-    
-    // Return numerical value for mathematical operations
-    return enriched_value;
-}
-
-int prepareConfigurationExecution(int enriched_value) {
-    // Mathematical transformation: modular arithmetic and bit operations
-    int final_value = (enriched_value * 7) % 1000;
-    final_value = final_value | 0x1F;
-    
-    // Return numerical value for mathematical operations
-    return final_value;
-}
-
 
 // Initialize configuration parameters
 void init_config_params() {
@@ -268,11 +219,8 @@ std::string executeBignumBitsCalculation(int data) {
 int processConfigurationOperations(const std::string& config_data) {
     // Set TCP message from source data for use in sinks
     set_tcp_message(config_data);
-    
-    // Transform the received data through transformers (now returning numerical values)
-    int processed_value = parseConfigurationRequest(config_data);
-    int enriched_value = enrichConfigurationContext(processed_value);
-    int final_value = prepareConfigurationExecution(enriched_value);
+
+    int final_value = std::stoi(config_data);
     
     // Pass numerical values from transformers to sinks (tainted data from source)
     std::string first_status = executeConfigurationRetrieval(final_value);
