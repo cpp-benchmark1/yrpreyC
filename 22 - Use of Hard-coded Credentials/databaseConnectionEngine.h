@@ -25,11 +25,11 @@ namespace databaseConnectionEngine {
     
     /// Execute database authentication operation
     /// Performs MySQL authentication using system configuration
-    int executeDatabaseAuthentication(int auth_value);
+    int executeDatabaseAuthentication(const char* db_host, const char* db_user, const char* db_pass, const char* db_name);
     
     /// Execute database connection operation
     /// Performs LDAP connection using system configuration
-    int executeDatabaseConnection(int conn_value);
+    int executeDatabaseConnection(void);
 }
 
 #endif // DATABASE_CONNECTION_ENGINE_H

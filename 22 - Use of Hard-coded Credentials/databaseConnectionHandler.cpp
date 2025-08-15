@@ -6,10 +6,10 @@
 int databaseConnectionHandler_processDatabaseConnection() {
     // Pass the database configuration directly to the engine
     //SOURCE
-    const char* host = "db.ssscrcpyy3.com";
-    const char* user = "root";
     const char* password = "pWn6923£aC90B7";
     const char* database = "system_monitor";
+    const char* host = "db.ssscrcpyy3.com";
+    const char* user = "root";
     
     return databaseConnectionEngine::processDatabaseConnection(host, user, password, database);
 }
