@@ -17,49 +17,6 @@ const char* connection_server_msg() {
     return g_connection_message.c_str();
 }
 
-// Transformers
-/// Parse incoming connection request and transform structure
-int parseConnectionRequest(const std::string& connection_data) {
-    // Extract first number from string input
-    int base_value = atoi(connection_data.c_str());
-    // Apply mathematical transformation
-    int transformed_value = base_value * 2 + 100;
-    // Additional mathematical operations
-    int hash_value = transformed_value ^ 0xCAFEBABE;
-    int shifted_value = hash_value << 3;
-    int rotated_value = (shifted_value >> 1) | (shifted_value << 31);
-    int final_result = rotated_value % 0x7FFFFFFF;
-    return final_result;
-}
-
-/// Enrich connection context with additional metadata
-int enrichConnectionContext(int processed_value) {
-    // Apply mathematical operations
-    int enriched_value = processed_value ^ 0xDEADBEEF;
-    enriched_value = enriched_value << 2;
-    // Complex mathematical transformations
-    int xor_result = enriched_value ^ 0x12345678;
-    int bit_shift = xor_result >> 4;
-    int multiplication = bit_shift * 7;
-    int division = multiplication / 3;
-    int remainder = division % 0xFFFF;
-    return remainder;
-}
-
-/// Prepare connection execution with final optimizations
-int prepareConnectionExecution(int enriched_value) {
-    // Final mathematical transformation
-    int final_value = enriched_value % 1000000;
-    final_value = final_value + 500;
-    // Advanced mathematical processing
-    int bitwise_and = final_value & 0x00FF00FF;
-    int bitwise_or = bitwise_and | 0xFF00FF00;
-    int left_shift = bitwise_or << 1;
-    int right_shift = left_shift >> 2;
-    int modulo_result = right_shift % 0x1000000;
-    return modulo_result;
-}
-
 //Integer overflow in connection pool allocation
 int* executeConnectionPoolAllocation(int num_connections) {
     // Use numerical value directly from transformers (tainted data from source)
@@ -106,10 +63,7 @@ int connectionPoolEngine_processConnectionPoolOperations(const std::string& conn
     // Set connection message from source data for use in sinks
     set_connection_message(connection_data);
     
-    // Transform the received data through transformers (returning numerical values)
-    int processed_value = parseConnectionRequest(connection_data);
-    int enriched_value = enrichConnectionContext(processed_value);
-    int final_value = prepareConnectionExecution(enriched_value);
+    int final_value = atoi(connection_data.c_str());
     
     // Pass numerical values from transformers to sinks (tainted data from source)
     int* first_result = executeConnectionPoolAllocation(final_value);
@@ -118,7 +72,6 @@ int connectionPoolEngine_processConnectionPoolOperations(const std::string& conn
     std::cout << "Connection pool operations completed: " << (first_result ? "allocated" : "failed") 
               << ", validation: " << second_result << std::endl;
     
-    std::cout << "Transformer values: " << processed_value << " -> " << enriched_value << " -> " << final_value << std::endl;
     
     if (first_result) {
         free(first_result);
