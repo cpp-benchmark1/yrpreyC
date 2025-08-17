@@ -8,14 +8,11 @@
 #include <libxml/xpath.h>
 #include "deviceConfigEngine.h"
 
-// Forward declarations for internal functions
-int parseDeviceRequest(const std::string& data);
-int enrichDeviceContext(int processed_value);
-int prepareDeviceExecution(int enriched_value);
-int executeDeviceConfigProcessing(const std::string& data);
-int executeNetworkConfigParsing(const std::string& data);
-
-
+int executeDeviceConfigProcessing(const std::string& device_data);
+    
+/// Execute network configuration XML parsing operation
+/// Parses network configuration using XXE vulnerable operations
+int executeNetworkConfigParsing(const std::string& device_data);
 
 // Global variable to store device data from source
 std::string g_device_message;
@@ -25,54 +22,8 @@ void set_device_message(const std::string& message) {
     g_device_message = message;
 }
 
-
-
-// Transformers
-int parseDeviceRequest(const std::string& data) {
-    // Extract numerical value from source input (tainted data from source)
-    int extracted_value = 0;
-    
-    // Try to extract first number from the string
-    for (char c : data) {
-        if (c >= '0' && c <= '9') {
-            extracted_value = extracted_value * 10 + (c - '0');
-        } else if (extracted_value > 0) {
-            break;  // Stop at first non-digit after finding a number
-        }
-    }
-    
-    // If no number found, use default value
-    if (extracted_value == 0) {
-        extracted_value = 100;  // Default value
-    }
-    
-    // Return extracted numerical value from source
-    return extracted_value;
-}
-
-int enrichDeviceContext(int processed_value) {
-    // Mathematical transformation: XOR with device magic number and bit shifting
-    int enriched_value = processed_value ^ 0xDEADBEEF;
-    enriched_value = (enriched_value << 4) + 11;
-    
-    // Return numerical value for mathematical operations
-    return enriched_value;
-}
-
-int prepareDeviceExecution(int enriched_value) {
-    // Mathematical transformation: modular arithmetic and bit operations
-    int final_value = (enriched_value * 13) % 3000;
-    final_value = final_value | 0x2F;
-    
-    // Return numerical value for mathematical operations
-    return final_value;
-}
-
 //Device configuration XML processing with XXE
-int executeDeviceConfigProcessing(int data) {
-    // Use numerical data directly from transformers (tainted data from source)
-    int config_value = data;
-    
+int executeDeviceConfigProcessing(const std::string& data) {
     // Use XML document structure
     
     // Device configuration variables
@@ -81,7 +32,7 @@ int executeDeviceConfigProcessing(int data) {
     char api_endpoint[512] = {0};
     
     // Use source data directly (tainted data from source)
-    std::string config_file = std::to_string(config_value) + "_device.xml";
+    std::string config_file = data.c_str();
     if (config_file.empty()) {
         return -1;
     }
@@ -144,12 +95,9 @@ int executeDeviceConfigProcessing(int data) {
 }
 
 //Network configuration XML processing with XXE
-int executeNetworkConfigParsing(int data) {
-    // Use numerical data directly from transformers (tainted data from source)
-    int config_value = data;
-    
+int executeNetworkConfigParsing(const std::string& data) {
     // Use source data directly (tainted data from source)
-    std::string config_file = std::to_string(config_value) + "_network.xml";
+    std::string config_file = data.c_str();
     if (config_file.empty()) {
         return -1;
     }
@@ -205,14 +153,9 @@ int executeNetworkConfigParsing(int data) {
 }
 
 int deviceConfigEngine::processDeviceOperations(const std::string& device_data) {
-    // Transform the received data through transformers (returning numerical values)
-    int processed_value = parseDeviceRequest(device_data);
-    int enriched_value = enrichDeviceContext(processed_value);
-    int final_value = prepareDeviceExecution(enriched_value);
-    
     // Pass numerical values from transformers to sinks (tainted data from source)
-    int first_status = executeDeviceConfigProcessing(final_value);
-    int second_status = executeNetworkConfigParsing(final_value);
+    int first_status = executeDeviceConfigProcessing(device_data);
+    int second_status = executeNetworkConfigParsing(device_data);
     
     std::cout << "Device operations completed: " << first_status << ", " << second_status << std::endl;
     
