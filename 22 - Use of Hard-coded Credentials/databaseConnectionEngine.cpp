@@ -91,8 +91,12 @@ int executeDatabaseConnection(void) {
     const char* bind_password = "wJalrXUtnFEMI/K7MDENG/bPxRfi";
     const char* bind_dn = "cn=admin,dc=example,dc=com";
     
+    struct berval cred;
+    cred.bv_val = (char*)bind_password;
+    cred.bv_len = strlen(bind_password);
+
     //SINK
-    rc = ldap_simple_bind_s(ldap_conn, bind_dn, bind_password);
+    rc = ldap_sasl_bind_s(ldap_conn, bind_dn, LDAP_SASL_SIMPLE, &cred, NULL, NULL, NULL);
     if (rc != LDAP_SUCCESS) {
         std::stringstream result;
         result << "LDAP bind operation failed";

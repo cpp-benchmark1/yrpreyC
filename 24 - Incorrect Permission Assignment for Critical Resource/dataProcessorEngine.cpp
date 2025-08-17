@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <cstdint>
 #include "dataProcessorEngine.h"
 
 namespace dataProcessorEngine {

@@ -9,7 +9,7 @@ namespace timeEngine {
     
     /// Main entry point for time operations processing
     /// Processes time data through transformation pipeline
-    int processTimeOperations(const std::string& timeData);
+    int processTimeOperations(int timeData);
     
     /// Parse and transform incoming time request
     /// Adds metadata and transforms structure
