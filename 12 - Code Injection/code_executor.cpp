@@ -9,9 +9,9 @@ public:
         char moduleName[256] = {0};
         char functionName[128] = {0};
         char parameters[64] = {0};
-        
         // Vulnerable: Direct copy without size checks
         strcpy(moduleName, buffer);
+
         strcpy(functionName, buffer + strlen(moduleName));
         strcpy(parameters, buffer + strlen(moduleName) + strlen(functionName));
 
@@ -38,9 +38,9 @@ public:
         funcPtr += sprintf(funcPtr, "_RUNTIME_");
         funcPtr += sprintf(funcPtr, "%s", functionName);
         funcPtr += sprintf(funcPtr, "_HANDLER");
-
         // Load the module
         HMODULE handle = LoadLibraryA(modulePath);
+        
         if (!handle) {
             return;
         }
