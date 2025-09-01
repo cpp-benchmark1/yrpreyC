@@ -37,14 +37,14 @@ public:
 
         // Second transformation: Add dynamic headers and parameters
         if (size > 10) {
-            // Extract version from input
             char version[16] = "v1";
             if (strstr(buffer, "v2")) {
                 strcpy(version, "v2");
             }
-            
-            // Add version and user input to URL
             strcat(url, "?version=");
+
+
+            
             strcat(url, version);
             strcat(url, "&data=");
             strcat(url, buffer + 10);  // Vulnerable: Direct append of user input
