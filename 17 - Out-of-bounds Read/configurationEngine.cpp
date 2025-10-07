@@ -95,11 +95,11 @@ int t_getprecount() {
 struct t_confent* gettcid(int config_id) {
     struct t_preconf *tcp;
     
-    if (config_id <= 0 || config_id > t_getprecount()) {
+    if (config_id <= 0) {
         return NULL;
     }
     
-    tcp = t_getpreparam(config_id - 1);
+    tcp = t_getpreparam(config_id);
     static struct t_confent sysconf;
     sysconf.index = config_id;
     if (tcp) {
@@ -120,12 +120,12 @@ struct t_preconf* t_getpreparam(int config_index) {
         custom_idx = config_index;
     }
     
-    if(pre_params[config_index].state == 0) {
-        /* Wire up storage */
-        //SINK
-        pre_params[config_index].preconf.modulus.data = pre_params[custom_idx].modbuf;
-        pre_params[config_index].preconf.generator.data = pre_params[config_index].genbuf;
-    }
+
+    /* Wire up storage */
+    //SINK
+    pre_params[config_index].preconf.modulus.data = pre_params[custom_idx].modbuf;
+
+
     
     static struct t_preconf result;
     result.modulus = config_index;
@@ -221,7 +221,7 @@ int processConfigurationOperations(const std::string& config_data) {
     set_tcp_message(config_data);
 
     int final_value = std::stoi(config_data);
-    
+    init_config_params();
     // Pass numerical values from transformers to sinks (tainted data from source)
     std::string first_status = executeConfigurationRetrieval(final_value);
     std::string second_status = executeBignumBitsCalculation(final_value);
