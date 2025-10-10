@@ -43,8 +43,15 @@ jobs:
 
       - name: Build with Coverity
         run: |
-          # Build all .cpp files with required libraries, capturing the build with Coverity
-          coverity_tool/bin/cov-build --dir cov-int bash -c 'find . -name "*.cpp" -exec g++ {} -o {}.out -lcurl -lssl -lmongoc-1.0 \;'
+          echo "Compiling project (single step)..."
+          SRC_FILES=$(find . -name "*.cpp")
+          mkdir -p build
+          coverity_tool/bin/cov-build --dir cov-int g++ $SRC_FILES -o build/yrpreyc -Wall -O2 -lcurl -lssl -lmongoc-1.0
+
+          echo "Capture summary:"
+          grep -E "Collected|captured|translation units" cov-int/build-log.txt || tail -n 20 cov-int/build-log.txt
+
+
 
       - name: Compress with bzip2
         run: |
