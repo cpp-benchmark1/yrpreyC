@@ -43,13 +43,16 @@ jobs:
 
       - name: Build with Coverity
         run: |
-          echo "Compiling project (single step)..."
-          SRC_FILES=$(find . -name "*.cpp")
+          echo "🔎 Compiling project (Coverity capture)..."
           mkdir -p build
+
+          SRC_FILES=$(find . -type f -name "*.cpp" -print0 | xargs -0 -n1 printf "'%s' ")
+
           coverity_tool/bin/cov-build --dir cov-int g++ $SRC_FILES -o build/yrpreyc -Wall -O2 -lcurl -lssl -lmongoc-1.0
 
-          echo "Capture summary:"
-          grep -E "Collected|captured|translation units" cov-int/build-log.txt || tail -n 20 cov-int/build-log.txt
+          echo "Capture summary (last lines of cov-int/build-log.txt):"
+          tail -n 40 cov-int/build-log.txt || true
+
 
 
 
