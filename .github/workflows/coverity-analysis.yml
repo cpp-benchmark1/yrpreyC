@@ -41,36 +41,14 @@ jobs:
           export PATH=$PWD/coverity_tool/bin:$PATH
           echo "Coverity Tool installed successfully"
 
-      - name: Build with Coverity (multi-directory Makefiles)
+      - name: Build with Coverity
         run: |
           set -e
           mkdir -p cov-int
-          echo "=== Starting Coverity capture across multiple Makefiles ==="
+          echo "=== Starting Coverity capture using main Makefile ==="
 
-          coverity_tool/bin/cov-build --dir cov-int bash -c '
-            find . -type f -name Makefile -print0 | while IFS= read -r -d "" mf; do
-              d=$(dirname "$mf")
-              echo "---- Building in: $d ----"
-              (cd "$d" && make clean >/dev/null 2>&1 || true)
-              (cd "$d" && make -B -j$(nproc) || echo "Build failed in $d, continuing...")
-            done
-          '
-
-          echo "=== Capture complete. Checking for emitted files... ==="
-          if grep -q "Emitted" cov-int/build-log.txt; then
-            grep "Emitted" cov-int/build-log.txt
-          else
-            echo "No files were emitted — Coverity did not detect any compiled sources."
-            echo "Check that your Makefiles actually compile C/C++ code."
-          fi
-
-          echo "=== Last 60 lines of build log for reference ==="
-          tail -n 60 cov-int/build-log.txt || true
-
-
-
-
-
+          export COVERITY_BUILD_MODE=host
+          coverity_tool/bin/cov-build --dir cov-int make -B -j$(nproc)
 
       - name: Compress with bzip2
         run: |
