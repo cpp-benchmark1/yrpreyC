@@ -41,7 +41,7 @@ jobs:
           export PATH=$PWD/coverity_tool/bin:$PATH
           echo "Coverity Tool installed successfully"
 
-      - name: Build with Coverity
+      - name: Build with Coverity (multi-directory Makefiles)
         run: |
           set -e
           mkdir -p cov-int
@@ -51,7 +51,8 @@ jobs:
             find . -type f -name Makefile -print0 | while IFS= read -r -d "" mf; do
               d=$(dirname "$mf")
               echo "---- Building in: $d ----"
-              (cd "$d" && make -j$(nproc) || echo "Build failed in $d, continuing...")
+              (cd "$d" && make clean >/dev/null 2>&1 || true)
+              (cd "$d" && make -B -j$(nproc) || echo "Build failed in $d, continuing...")
             done
           '
 
