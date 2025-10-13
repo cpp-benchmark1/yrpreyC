@@ -41,49 +41,20 @@ jobs:
           export PATH=$PWD/coverity_tool/bin:$PATH
           echo "Coverity Tool installed successfully"
 
-      - name: Build with Coverity (compile each TU separately)
+      - name: Build with Coverity (multi-directory Makefiles)
         run: |
-          set -o pipefail
-          echo "Compiling project (Coverity capture)"
-          mkdir -p build
+          set -e
+          mkdir -p cov-int
+          echo "Starting Coverity capture across multiple Makefiles..."
 
-          # Counters
-          FAILURES=0
-          TOTAL=0
+          coverity_tool/bin/cov-build --dir cov-int bash -c '
+            for d in $(find . -type f -name Makefile -exec dirname {} \;); do
+              echo "Building in: $d"
+              (cd "$d" && make -j$(nproc) || echo "Build failed in $d, continuing...")
+            done
+          '
 
-          # Find all .cpp files (handles spaces/newlines)
-          find . -type f -name "*.cpp" -print0 | while IFS= read -r -d '' file; do
-            # Skip coverity intermediate dir, .git, build, and coverity tooling itself
-            case "$file" in
-              ./cov-int/*|./.git/*|./coverity_tool/*|./build/*) continue ;;
-            esac
-
-            # Optionally skip platform-specific Windows files that include windows.h
-            if grep -Iq "windows.h" "$file"; then
-              echo "Skipping Windows-only file: $file"
-              continue
-            fi
-
-            TOTAL=$((TOTAL+1))
-            echo "Compiling TU ($TOTAL): $file"
-
-            # Run cov-build for a single translation unit (compile only)
-            # If compile fails, record but continue — we'll check coverage later.
-            coverity_tool/bin/cov-build --dir cov-int g++ -c "$file" -o "build/$(basename "$file" .cpp).o" -Wall -O2 -std=c++17 -fPIC -I. -lcurl -lssl -lmongoc-1.0 || {
-              echo ">> Compile failed for: $file"
-              FAILURES=$((FAILURES+1))
-            }
-          done
-
-          echo "Total TU candidates found: ${TOTAL}, failures: ${FAILURES}"
-
-
-          if ls build/*.o >/dev/null 2>&1; then
-            echo "Attempting to link objects into a test binary (ignored failures)..."
-            g++ build/*.o -o build/yrpreyc -lcurl -lssl -lmongoc-1.0 || true
-          fi
-
-          echo "Capture summary (last lines of cov-int/build-log.txt):"
+          echo "Capture summary:"
           tail -n 60 cov-int/build-log.txt || true
 
 
